@@ -1,14 +1,16 @@
 const updatebutton = document.getElementsByClassName('update-cart')
+const alertmessage = document.getElementById('alert_message')
+
 for (let i=0; i<updatebutton.length; i++){
     updatebutton[i].addEventListener('click', function(e){
            var product_id = e.target.dataset.product
            var product_action = e.target.dataset.action
            console.log(product_id, product_action)
            if(USER === 'AnonymousUser'){
-              alert("Not Logged In")
+              alert("Please log In");
            }
-           else{
-            updateUserOrder(product_id, product_action)       
+           else{   
+            updateUserOrder(product_id, product_action);        
            }
     })
 }
@@ -25,7 +27,5 @@ updateUserOrder = async(id, action) => {
         body: JSON.stringify({'productId': id, 'productAction': action})
     });
     const result = await response.json();
-    console.log(result);
     location.reload();
-
 }

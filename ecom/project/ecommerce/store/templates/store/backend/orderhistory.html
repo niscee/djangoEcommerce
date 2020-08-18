@@ -1,0 +1,44 @@
+{% extends 'store/backend/dashboard.html' %}
+{% load static %}
+
+{% block content %}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Image</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        {% if order %}
+            {% for item in order.orderitem_set.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.product.price|floatformat:2 }}</td>
+                <td>{{ item.date_added }}</td>
+                <td>${{ item.get_totalPrice|floatformat:2 }}</td>
+                <td><img src="{{ item.product.imageURL }}" alt="product_image" class="img-thumbnail" style="height:80px; width:120px;"></td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endif %}
+        
+    </tbody>
+</table>
+
+{% endblock  %}

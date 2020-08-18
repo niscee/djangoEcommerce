@@ -20,12 +20,19 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+
     path('', views.store, name='store'),
     path('about/', views.about, name='about'),
     path('<int:pk>/detail', views.detail, name='item_detail'),
     path('cart/', views.cart, name='cart'),
     path('checkout/', views.checkout, name='checkout'),
     path('updateItem/', views.updateItem, name='update_item'),
+
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('<int:pk>/password_change', views.password_change, name='password_change'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
     'store',
 ]
 
@@ -126,3 +127,6 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 MEDIA_URL = '/images/'
+
+#crispy form support default bootstrap 2 so changing it to bootstrap4
+CRISPY_TEMPLATE_PACK = 'bootstrap4'

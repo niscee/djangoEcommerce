@@ -1,14 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
+from django.utils import timezone
 
 # list of models
-class Customer(models.Model):
-    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
-    name = models.CharField(max_length=200, null=True)
-    email = models.CharField(max_length=200)
+# class Customer(models.Model):
+#     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=200, null=True)
+#     email = models.CharField(max_length=200)
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
 class Product(models.Model):
@@ -33,13 +35,14 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     date_ordered = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False)
-    transaction_id = models.CharField(max_length=100, null=True)
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable = False, unique=True)
+   
 
     def __str__(self):
-        return str(self.customer)
+        return str(self.transaction_id)
     
     #getting the total cost of cart Items
     @property
@@ -53,28 +56,29 @@ class Order(models.Model):
     def get_cartTotalItems(self):
         orderitems = self.orderitem_set.all()
         totalItems = sum([item.quantity for item in orderitems])
-        return totalItems        
+        return totalItems 
+          
 
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
-    date_added = models.DateTimeField(auto_now_add=True)   
+    date_added = models.DateTimeField(auto_now_add=True)  
 
-    # def __str__(self):
-    #      return self.order.transaction_id
+    class Meta:
+        ordering = ['-date_added']
 
     #getting total price of the single order item
     @property
     def get_totalPrice(self):
         total = self.product.price * self.quantity
-        return total    
+        return total             
 
 
 
 class ShippingAddress(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
     address = models.CharField(max_length=200)
     city = models.CharField(max_length=200)
