@@ -1,0 +1,53 @@
+{% extends 'store/backend/dashboard.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="alert alert-primary" style="text-align: center;">
+    Product List
+</div>
+<table class="table" style="margin:10px 0px; width:100%">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Image</th>
+            <th>Stock</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        {% if products %}
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>${{ product.price|floatformat:2 }}</td>
+                <td><img src="{{ product.imageURL }}" alt="product_image" class="img-thumbnail" style="height:80px; width:120px;"></td>
+                <td>{{ product.stock }}</td>
+                <td style="display: inline-block">
+                    <a href="{% url 'edit_product' product.id %}"><button class="btn btn-sm btn-info" style="width:60px;">Edit</button></a>
+                    <form action="{% url 'delete_product' product.id %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-danger" style="width:60px;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endif %}
+        
+    </tbody>
+</table>
+
+
+{% endblock  %}

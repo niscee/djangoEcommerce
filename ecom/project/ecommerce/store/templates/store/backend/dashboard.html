@@ -38,31 +38,51 @@
 
 	<div class="container-fluid">
 
-		<div class="row" style="margin: 30px 20px;">
+		<div class="row" style="margin: 30px 0px;">
 
-			<div class="col-lg-3 col-md-3 col-sm-3">
+			<div class="col-lg-3 col-md-12 col-sm-12 col-xs-12" style="text-align: center;">
 				<ul class="list-group">
-					<a href="{% url 'store' %}">
-						<li class="list-group-item">Continue shopping</li>
-					</a>
-					<a href="{% url 'dashboard' %}">
-						<li class="list-group-item">Order History</li>
+					<li class="list-group-item"><b><u>{{ request.user.groups.all.0|title }} Dashboard</u></b></li>
+					
+					{% if request.user.groups.all.0.name == "customer" %}
+						<a href="{% url 'store' %}">
+							<li class="list-group-item">Continue shopping</li>
+						</a>
+						<a href="{% url 'order_list' %}">
+							<li class="list-group-item">Order History</li>
+						</a>
+					{% endif %}	
+
+					<a href="{% url 'update_profile' request.user.id %}">
+						<li class="list-group-item">Update Profile</li>
 					</a>
 					<a href="{% url 'password_change' request.user.id %}">
 						<li class="list-group-item">Password change</li>
 					</a>
+
+					{% if request.user.groups.all.0.name == "manager" %}
+				        <a href="{% url 'products' %}">
+							<li class="list-group-item">Products List</li>
+						</a>
+						<a href="{% url 'add_product' %}">
+							<li class="list-group-item">Add Product</li>
+						</a>
+					{% endif %}	
+
 				</ul>
 			</div>
 
-			<div class="col-lg-8 col-md-8 col-sm-8">
+			<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
 				
-				{% if messages %}
-					{% for msg in messages %}
-					<div class="alert alert-{{msg.tags}}">
-						{{msg}}
-					</div>
-					{% endfor %}
-				{% endif %}
+				<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8" style="margin:auto">
+					{% if messages %}
+						{% for msg in messages %}
+						<div class="alert alert-{{msg.tags}}">
+							{{msg}}
+						</div>
+						{% endfor %}
+					{% endif %}
+				</div>
 
 				{% block content %}
 

@@ -2,16 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# list of models
-# class Customer(models.Model):
-#     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
-#     name = models.CharField(max_length=200, null=True)
-#     email = models.CharField(max_length=200)
+#list of models
+class Profile(models.Model):
+    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
+    address = models.CharField(max_length=200, null=True, default=None)
+    phone = models.CharField(max_length=200, default=None, null=True)
 
-#     def __str__(self):
-#         return self.name
-
+    
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
@@ -19,6 +19,7 @@ class Product(models.Model):
     digital = models.BooleanField(default=False, null=True, blank=True)
     image = models.ImageField(null=True, blank=True)
     detail = models.TextField(null=True, blank=True)
+    stock = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name
@@ -42,7 +43,7 @@ class Order(models.Model):
    
 
     def __str__(self):
-        return str(self.transaction_id)
+        return str(self.user)
     
     #getting the total cost of cart Items
     @property
@@ -73,7 +74,10 @@ class OrderItem(models.Model):
     @property
     def get_totalPrice(self):
         total = self.product.price * self.quantity
-        return total             
+        return total   
+
+    def __str__(self):
+        return str(self.order)              
 
 
 
@@ -87,3 +91,17 @@ class ShippingAddress(models.Model):
         return self.address
 
 
+""" list of signals """
+#initiatied whenever user creates a new account.
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+     
+
+
+# def create_profile(sender, instance, created, **kwargs):
+#     if created:
+#         Profile.objects.create(user=instance)
+
+# post_save.connect(create_profile, sender=User)  

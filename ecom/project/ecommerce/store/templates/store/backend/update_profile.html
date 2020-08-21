@@ -1,0 +1,17 @@
+{% extends 'store/backend/dashboard.html' %}
+{% load static %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="col-md-8 col-sm-8 col-lg-8" style="margin:10px auto;">
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{user_form|crispy}}
+        {{profile_form|crispy}}
+        <button type="submit" class="btn btn-outline-success btn-block">submit</button>
+    </form>   
+</div>
+   
+
+{% endblock  %}
