@@ -1,5 +1,5 @@
 const updatebutton = document.getElementsByClassName('update-cart')
-const alertmessage = document.getElementById('alert_message')
+
 
 for (let i=0; i<updatebutton.length; i++){
     updatebutton[i].addEventListener('click', function(e){
@@ -12,6 +12,13 @@ for (let i=0; i<updatebutton.length; i++){
            else{   
             updateUserOrder(product_id, product_action);        
            }
+    })
+}
+
+for (let i=0; i<deletebutton.length; i++){
+    deletebutton[i].addEventListener('click', function(e){
+        var product_id = e.target.dataset.product
+        alert(product_id);
     })
 }
 

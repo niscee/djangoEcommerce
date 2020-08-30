@@ -128,6 +128,22 @@ def checkoutForm(request):
         address = request.POST.get('address')
         city = request.POST.get('city')
         order = Order.objects.get(user=request.user, complete=False)
+        cartItem = order.orderitem_set.all()
+        
+        
+        #checking if the cart item is available in the store
+        for cart in cartItem:
+            product = Product.objects.get(id=cart.product.id)
+            if product.stock < cart.quantity:
+                messages.warning(request, f'{product.name} is out of stock. only {product.stock} is available.')
+                return redirect('checkout')
+        
+        #updating the product stock after order.
+        for cart in cartItem:
+            product = Product.objects.get(id=cart.product.id)
+            product.stock -= cart.quantity
+            product.save()
+                
         form = ShippingAddress(user=request.user, order=order, address=address, city=city)
         form.save()
         order.complete = True
@@ -157,14 +173,19 @@ def updateItem(request):
     
     if productAction == 'add':
         orderItem.quantity += 1
+        
     elif productAction == 'remove': 
         orderItem.quantity -= 1
+        
+    elif productAction == 'delete': 
+        orderItem.delete() 
+        return JsonResponse('item added', safe=False)  
     
     orderItem.save()
 
     if orderItem.quantity < 1:
         orderItem.delete()
-
+    
     return JsonResponse('item added', safe=False)  
 
 

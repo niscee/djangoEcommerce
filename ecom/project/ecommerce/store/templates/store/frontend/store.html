@@ -12,10 +12,11 @@
 					{% if product.stock < 1 %}
 				   	    <p style="float:right; color:red">Out of Stock</p>
 					{% else %}
-						<p style="float:right; color:green">Available</p>
+						<p style="float:right; color:green">Available({{ product.stock }})</p>
 					{% endif %}	
 				</h6>
 				<hr>
+				
 				{% if product.stock > 0 %}
 				<button data-product="{{product.id}}" data-action="add" class="btn btn-outline-dark btn-sm add-btn update-cart">Add to Cart</button>
 				{% endif %}

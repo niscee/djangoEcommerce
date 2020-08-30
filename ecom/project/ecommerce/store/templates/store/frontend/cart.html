@@ -30,6 +30,7 @@
                 <div style="flex:1"><strong>Price</strong></div>
                 <div style="flex:1"><strong>Quantity</strong></div>
                 <div style="flex:1"><strong>Total</strong></div>
+                <div style="flex:1"><strong>Operation</strong></div>
             </div>
             
             {% for item in items %}
@@ -46,6 +47,9 @@
                     </div>
                 </div>
                 <div style="flex:1"><p>${{item.get_totalPrice|floatformat:2}}</p></div>
+                <div style="flex:1">
+                    <button data-product="{{item.product.id}}"  data-action="delete" class="btn btn-outline-danger btn-sm add-btn update-cart">Delete</button>
+                </div>
             </div>
             {% endfor %}
            

@@ -43,7 +43,7 @@ class Order(models.Model):
    
 
     def __str__(self):
-        return str(self.user)
+        return str(self.transaction_id)
     
     #getting the total cost of cart Items
     @property
@@ -90,6 +90,9 @@ class ShippingAddress(models.Model):
 
     def __str__(self):
         return self.address
+
+    
+
 
 
 """ list of signals """
