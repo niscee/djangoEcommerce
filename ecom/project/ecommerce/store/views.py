@@ -37,6 +37,41 @@ def searchItem(request):
     context = {'products':products, 'order':order }
     return render(request, 'store/frontend/search.html', context)
 
+# sort item by price highest first.
+def sortPriceHighest(request):
+    products = Product.objects.order_by('-price')
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+
+    context = {'products':products, 'order':order }
+    return render(request, 'store/frontend/search.html', context)
+
+# sort item by recent data first.
+def sortProductLatest(request):
+    products = Product.objects.order_by('-id')
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+
+    context = {'products':products, 'order':order }
+    return render(request, 'store/frontend/search.html', context)
+
+
+# sort item by price Lowest first.
+def sortPriceLowest(request):
+    products = Product.objects.order_by('price')
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+
+    context = {'products':products, 'order':order }
+    return render(request, 'store/frontend/search.html', context)
+
+
 
 # about page.
 def about(request):
@@ -85,6 +120,28 @@ def checkout(request):
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
     context = {'items':items, 'order':order}
     return render(request, 'store/frontend/checkout.html', context)
+
+
+# order store.
+def checkoutForm(request):
+    if request.user.is_authenticated:
+        address = request.POST.get('address')
+        city = request.POST.get('city')
+        order = Order.objects.get(user=request.user, complete=False)
+        form = ShippingAddress(user=request.user, order=order, address=address, city=city)
+        form.save()
+        order.complete = True
+        order.save()
+        
+  
+    items = [] 
+    order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+    context = {'items':items, 'order':order}
+    return render(request, 'store/frontend/checkout.html', context)    
+
+
+
+
     
 
 
@@ -96,7 +153,7 @@ def updateItem(request):
     productAction = data['productAction']
     product = Product.objects.get(id=productId)
     order, created = Order.objects.get_or_create(user=request.user, complete=False) 
-    orderItem, created = OrderItem.objects.get_or_create(order=order, product=product) 
+    orderItem, created = OrderItem.objects.get_or_create(order=order, product=product, user=request.user) 
     
     if productAction == 'add':
         orderItem.quantity += 1
@@ -108,7 +165,9 @@ def updateItem(request):
     if orderItem.quantity < 1:
         orderItem.delete()
 
-    return JsonResponse('item added', safe=False)     
+    return JsonResponse('item added', safe=False)  
+
+
 
 
 
@@ -161,9 +220,9 @@ def logout_view(request):
 @login_required(login_url='/login/')  
 def orderList(request):
     try:
-        order = Order.objects.get(user=request.user, complete=True)
-        items = order.orderitem_set.all().order_by('date_added')
-        context = {'order':order, 'items':items }
+        # order = Order.objects.get(user=request.user, complete=True)
+        items = OrderItem.objects.filter(user=request.user)
+        context = { 'items':items }
         return render(request, 'store/backend/orderhistory.html', context)
     except:
         context = {}
@@ -256,7 +315,6 @@ def edit_product(request, pk):
 
 #update profile.
 @login_required(login_url='/login/')  
-@page_access(allowed=['manager','store assistant'])
 def update_profile(request, pk):
     if request.method == "POST":
         user_profile = Profile.objects.get(user=pk)

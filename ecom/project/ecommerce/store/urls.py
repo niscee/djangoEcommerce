@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
+
     #authentication url
     path('login/', views.login_view, name='login'),
     path('register/', views.register, name='register'),
@@ -33,6 +34,10 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('updateItem/', views.updateItem, name='update_item'),
     path('search_product/', views.searchItem, name='search_item'),
+    path('checkout_form/', views.checkoutForm, name='checkout_form'),
+    path('sort_price_highest/', views.sortPriceHighest, name='sortPriceHighest'),
+    path('sort_price_lowest/', views.sortPriceLowest, name='sortPriceLowest'),
+    path('sort_product_latest/', views.sortProductLatest, name='sortProductLatest'),
     
     #backend url
     path('dashboard/', views.dashboard, name='dashboard'),
