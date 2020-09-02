@@ -125,8 +125,10 @@ def checkout(request):
     context = {'items':items, 'order':order}
     return render(request, 'store/frontend/checkout.html', context)
 
-
-# order store.
+# order store and send email.
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.template.loader import render_to_string
 def checkoutForm(request):
     if request.user.is_authenticated:
         address = request.POST.get('address')
@@ -153,6 +155,16 @@ def checkoutForm(request):
         order.complete = True
         order.save()
         
+        
+        template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
+        email = EmailMessage(
+                    'Thank You',
+                    template,
+                    settings.EMAIL_HOST_USER,
+                    [request.user.email],
+                )
+        email.fail_silently = False
+        email.send()
   
     items = [] 
     order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
