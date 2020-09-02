@@ -155,16 +155,16 @@ def checkoutForm(request):
         order.complete = True
         order.save()
         
-        
-        template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
-        email = EmailMessage(
-                    'Thank You',
-                    template,
-                    settings.EMAIL_HOST_USER,
-                    [request.user.email],
-                )
-        email.fail_silently = False
-        email.send()
+        #sending email
+        # template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
+        # email = EmailMessage(
+        #             'Thank You',
+        #             template,
+        #             settings.EMAIL_HOST_USER,
+        #             [request.user.email],
+        #         )
+        # email.fail_silently = False
+        # email.send()
   
     items = [] 
     order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
