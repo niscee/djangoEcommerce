@@ -30,12 +30,13 @@ def store(request):
 def searchItem(request):
     item_name = request.GET.get('search')
     products = Product.objects.filter(name__contains=item_name)
+    specials = {}
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order }
+    context = {'products':products, 'order':order, 'specials':specials }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by price highest first.
@@ -158,6 +159,7 @@ def checkoutForm(request):
         #sending email
         # template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
         # email = EmailMessage(
+            
         #             'Thank You',
         #             template,
         #             settings.EMAIL_HOST_USER,
