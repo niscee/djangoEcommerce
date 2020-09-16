@@ -71,6 +71,8 @@ urlpatterns = [
     path('<int:pk>/delete_product', views.delete_product, name='delete_product'),
     path('<int:pk>/edit_product', views.edit_product, name='edit_product'),
     path('<int:pk>/update_profile', views.update_profile, name='update_profile'),
+    path('contact_manager', views.contactManager, name='contact_manager'),
+    path('email', views.emailManager, name='email_manager'),
 
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),

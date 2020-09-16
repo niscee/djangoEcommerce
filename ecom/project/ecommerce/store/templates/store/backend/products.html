@@ -21,7 +21,11 @@
         {% if products %}
             {% for product in products %}
             <tr>
-                <td>{{ product.name }}</td>
+                {% if product.special == True %}
+                   <td>{{ product.name }} <span style="color: red;">(special)</span></td>
+                {% else %}  
+                   <td>{{ product.name }}</td>
+                {% endif %}  
                 <td>${{ product.price|floatformat:2 }}</td>
                 <td><img src="{{ product.imageURL }}" alt="product_image" class="img-thumbnail" style="height:80px; width:120px;"></td>
                 <td>{{ product.stock }}</td>

@@ -13,6 +13,7 @@ from django.contrib.auth.models import Group
 from .decorators import page_access
 import json
 
+
 """ List of frontend controller """
 # home page.
 def store(request):
@@ -130,6 +131,7 @@ def checkout(request):
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.template.loader import render_to_string
+
 def checkoutForm(request):
     if request.user.is_authenticated:
         address = request.POST.get('address')
@@ -156,7 +158,7 @@ def checkoutForm(request):
         order.complete = True
         order.save()
         
-        #sending email
+        # sending email
         # template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
         # email = EmailMessage(
             
@@ -173,10 +175,6 @@ def checkoutForm(request):
     context = {'items':items, 'order':order}
     return render(request, 'store/frontend/checkout.html', context)    
 
-
-
-
-    
 
 
 """ get called when 'add to cart event is initiated, get product id 
@@ -266,6 +264,7 @@ def orderList(request):
     except:
         context = {}
         return render(request, 'store/backend/orderhistory.html', context) 
+
 
 #dashboard home page   
 @login_required(login_url='/login/')  
@@ -369,8 +368,39 @@ def update_profile(request, pk):
     profile_form = ProfileUpdateForm(instance=user_profile)
     context = {'user_form':user_form, 'profile_form':profile_form}
     return render(request, 'store/backend/update_profile.html', context)    
-                
-           
-        
-       
+    
+
+
+#view outofstock product.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def contactManager(request):
+    products = Product.objects.filter(stock=0)
+    context = { 'products':products }
+    return render(request, 'store/backend/contactmanager.html', context)            
+
+
+
+#email manager.  
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.template.loader import render_to_string  
+
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def emailManager(request):
+    message = request.POST.get('message')
+    email = User
+    
+    #sending email
+    template = render_to_string('store/frontend/emailbody.html',{'message':message})
+    email = EmailMessage(
+            'Amart alert message',
+                template,
+                settings.EMAIL_HOST_USER,
+                ["*******"],
+            )
+    email.fail_silently = False
+    email.send()
+    return redirect('contact_manager')        
     
