@@ -10,8 +10,8 @@
 
 
     <div class="dropdown" style="display:flex; flex-grow: 1">
-        <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
+        <button class="btn btn-secondary dropdown-toggle form-control" type="button" id="dropdownMenuButton"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             sort by
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -21,8 +21,17 @@
         </div>
     </div>
 
-    
-
+    <div class="dropdown" style="display:flex; flex-grow: 1">
+        <button class="btn btn-warning dropdown-toggle form-control" type="button" id="dropdownMenuButton"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Category
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            {% for cat in category %}
+            <a class="dropdown-item" href="{% url 'sortCategory' cat.id %}">{{ cat.c_name }}</a>
+            {% endfor %}
+        </div>
+    </div>
 
     <div style="flex-grow: 3">
         <form action="{% url 'search_item' %}" method="GET" style="display: flex;">

@@ -11,11 +11,17 @@ class Profile(models.Model):
     address = models.CharField(max_length=200, null=True, default=None)
     phone = models.CharField(max_length=200, default=None, null=True)
 
-    
+
+class Category(models.Model):
+    c_name = models.CharField(max_length=200) 
+
+    def __str__(self):
+        return self.c_name   
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
     price = models.FloatField()
+    category = models.ForeignKey(Category, default=None, null=True, blank=True, on_delete=models.CASCADE)
     special = models.BooleanField(default=False, null=True, blank=True)
     image = models.ImageField(null=True, blank=True)
     detail = models.TextField(null=True, blank=True)

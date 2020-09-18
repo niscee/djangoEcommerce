@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Product, Profile
+from .models import Product, Profile, Category
 
 # Create the form class.
 class RegisterForm(UserCreationForm):
@@ -19,7 +19,13 @@ class LoginForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name','special','detail','price','image','stock']  
+        fields = ['category','name','special','detail','price','image','stock']  
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['c_name']
 
 
 class ProfileUpdateForm(forms.ModelForm):

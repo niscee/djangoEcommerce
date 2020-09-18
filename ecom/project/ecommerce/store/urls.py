@@ -56,23 +56,29 @@ urlpatterns = [
     # sort product based on price desc url.
     path('sort_price_highest/', views.sortPriceHighest, name='sortPriceHighest'),
 
-    # sort product based on price asce url.
+    # sort product based on price asc url.
     path('sort_price_lowest/', views.sortPriceLowest, name='sortPriceLowest'),
 
-    # sort price based on latest product url.
+    # sort product based on latest  url.
     path('sort_product_latest/', views.sortProductLatest, name='sortProductLatest'),
+
+    # sort product based on category.
+    path('<int:pk>/category/', views.sortCategory, name='sortCategory'),
 
     
     # (backend_urls)
     path('dashboard/', views.dashboard, name='dashboard'),
     path('<int:pk>/password_change', views.password_change, name='password_change'),
     path('products/', views.products, name='products'),
+    path('add_category', views.add_category, name='add_category'),
+    path('<int:pk>/delete_category', views.delete_category, name='delete_category'),
     path('add_product/', views.add_product, name='add_product'),
     path('<int:pk>/delete_product', views.delete_product, name='delete_product'),
     path('<int:pk>/edit_product', views.edit_product, name='edit_product'),
     path('<int:pk>/update_profile', views.update_profile, name='update_profile'),
     path('contact_manager', views.contactManager, name='contact_manager'),
     path('email', views.emailManager, name='email_manager'),
+    
 
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .models import *
-from .form import LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, UserUpdateForm
+from .form import LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, UserUpdateForm, CategoryForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
@@ -11,6 +11,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from .decorators import page_access
+from .filter import *
 import json
 
 
@@ -24,44 +25,48 @@ def store(request):
   
     products = Product.objects.filter(special=False)
     specials = Product.objects.filter(special=True)
-    context = {'products':products, 'order':order, 'specials':specials }
+    category = Category.objects.all()
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
     return render(request, 'store/frontend/store.html', context)
 
 # search item.
 def searchItem(request):
     item_name = request.GET.get('search')
     products = Product.objects.filter(name__contains=item_name)
+    category = Category.objects.all()
     specials = {}
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by price highest first.
 def sortPriceHighest(request):
     products = Product.objects.order_by('-price').filter(special=False)
     specials = Product.objects.order_by('-price').filter(special=True)
+    category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by recent data first.
 def sortProductLatest(request):
     products = Product.objects.order_by('-id').filter(special=False)
     specials = Product.objects.order_by('-id').filter(special=True)
+    category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -69,13 +74,28 @@ def sortProductLatest(request):
 def sortPriceLowest(request):
     products = Product.objects.order_by('price').filter(special=False)
     specials = Product.objects.order_by('price').filter(special=True)
+    category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
     return render(request, 'store/frontend/search.html', context)
+
+
+# sort item by category.
+def sortCategory(request, pk):
+    products = Product.objects.filter(category=pk)
+    specials = Product.objects.filter(special=True)
+    category = Category.objects.all()
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    return render(request, 'store/frontend/search.html', context)    
 
 
 
@@ -303,7 +323,9 @@ def password_change(request, pk):
 @page_access(allowed=['manager','store assistant'])     
 def products(request):
     products = Product.objects.all()
-    context = {'products':products}
+    myFilter = ProductFilter(request.GET, queryset=products)
+    products = myFilter.qs
+    context = {'products':products, 'myFilter':myFilter}
     return render(request, 'store/backend/products.html', context)
 
 
@@ -319,6 +341,35 @@ def add_product(request):
     form = ProductForm()
     context = {'form':form}
     return render(request, 'store/backend/add_product.html', context) 
+
+
+#new category add page.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['manager','store assistant'])   
+def add_category(request):
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('add_category')
+    form = CategoryForm()
+    categories = Category.objects.all()
+    context = {'form':form, 'categories':categories}
+    return render(request, 'store/backend/add_category.html', context)  
+
+
+#product delete function.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['manager','store assistant'])   
+def delete_category(request, pk):
+    if request.method == "POST":
+        try:
+            category = Category.objects.get(id=pk)
+            category.delete()
+            return redirect('add_category')
+        except:
+            messages.warning(request, 'something went wrong!!')
+        return redirect('add_category')         
 
 
 #product delete function.   
@@ -389,18 +440,28 @@ from django.template.loader import render_to_string
 @login_required(login_url='/login/') 
 @page_access(allowed=['store assistant'])   
 def emailManager(request):
+
+    #getting email of a user related to manager group 
+    group = Group.objects.get(name="manager")
+    usersList = group.user_set.all()
+    emails = []
+    for user in usersList:
+        emails.append(user.email)
+
+    #getting message from form input   
     message = request.POST.get('message')
-    email = User
     
     #sending email
-    template = render_to_string('store/frontend/emailbody.html',{'message':message})
-    email = EmailMessage(
-            'Amart alert message',
-                template,
-                settings.EMAIL_HOST_USER,
-                ["*******"],
-            )
-    email.fail_silently = False
-    email.send()
+    for email in emails:
+        template = render_to_string('store/frontend/emailbody.html',{'message':message})
+        email = EmailMessage(
+                'Amart-message',
+                    template,
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                )
+        email.fail_silently = False
+        email.send()
+
     return redirect('contact_manager')        
     
