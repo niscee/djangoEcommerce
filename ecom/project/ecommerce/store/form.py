@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Product, Profile, Category
+from .models import Product, Profile, Category, SiteInfo, CustomOrder
 
 # Create the form class.
 class RegisterForm(UserCreationForm):
@@ -36,6 +36,23 @@ class ProfileUpdateForm(forms.ModelForm):
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['email','username']                     
+        fields = ['email','username']
+
+
+class SiteUpdateForm(forms.ModelForm):
+    class Meta:
+        model = SiteInfo
+        fields = ['about','logo'] 
+
+
+class CustomOrderForm(forms.ModelForm):
+    class Meta:
+        model = CustomOrder
+        fields = ['size', 'date', 'extra_items', 'custom_details', 'materials']                
+
+
+
+
+
 
                

@@ -3,7 +3,7 @@
 <html>
 
 <head>
-	<title>Nischal.com</title>
+	<title>Amart ecommerce</title>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
@@ -40,11 +40,11 @@
 
 		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin:auto; text-align: center;margin-top:5px;">
 			{% if messages %}
-				{% for msg in messages %}
-				<div class="alert alert-{{msg.tags}}">
-					{{msg}}
-				</div>
-				{% endfor %}
+			{% for msg in messages %}
+			<div class="alert alert-{{msg.tags}}">
+				{{msg}}
+			</div>
+			{% endfor %}
 			{% endif %}
 		</div>
 
@@ -53,15 +53,15 @@
 			<div class="col-lg-3 col-md-12 col-sm-12 col-xs-12" style="text-align: center;">
 				<ul class="list-group">
 					<li class="list-group-item"><b><u>{{ request.user.groups.all.0|title }} Dashboard</u></b></li>
-					
+
 					{% if request.user.groups.all.0.name == "customer" %}
-						<a href="{% url 'store' %}">
-							<li class="list-group-item">Continue shopping</li>
-						</a>
-						<a href="{% url 'order_list' %}">
-							<li class="list-group-item">Order History</li>
-						</a>
-					{% endif %}	
+					<a href="{% url 'store' %}">
+						<li class="list-group-item">Continue shopping</li>
+					</a>
+					<a href="{% url 'order_list' %}">
+						<li class="list-group-item">Order History</li>
+					</a>
+					{% endif %}
 
 					<a href="{% url 'update_profile' request.user.id %}">
 						<li class="list-group-item">Update Profile</li>
@@ -71,32 +71,38 @@
 					</a>
 
 					{% if request.user.groups.all.0.name == "manager" %}
-				        <a href="{% url 'products' %}">
-							<li class="list-group-item">Products List</li>
-						</a>
-						<a href="{% url 'add_product' %}">
-							<li class="list-group-item">Add Product</li>
-						</a>
-					{% endif %}	
-					
+					<a href="{% url 'site-custom' %}">
+						<li class="list-group-item">Site-Customization</li>
+					</a>
+					<a href="{% url 'products' %}">
+						<li class="list-group-item">Products List</li>
+					</a>
+					<a href="{% url 'add_product' %}">
+						<li class="list-group-item">Add Product</li>
+					</a>
+					{% endif %}
+
 					{% if request.user.groups.all.0.name == "store assistant" %}
-						<a href="{% url 'products' %}">
-							<li class="list-group-item">Products List</li>
-						</a>
-						<a href="{% url 'contact_manager' %}">
-							<li class="list-group-item">Contact Manager</li>
-						</a>
+					<a href="{% url 'products' %}">
+						<li class="list-group-item">Products List</li>
+					</a>
+					<a href="{% url 'contact_manager' %}">
+						<li class="list-group-item">Contact Manager</li>
+					</a>
+					<a href="{% url 'custom-order' %}">
+						<li class="list-group-item">Custom Order</li>
+					</a>
 					{% endif %}
 				</ul>
 			</div>
 
 			<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
-				
-				
+
+
 
 				{% block content %}
 
-                   
+
 
 				{% endblock content %}
 			</div>

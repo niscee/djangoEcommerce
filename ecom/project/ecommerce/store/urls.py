@@ -35,6 +35,9 @@ urlpatterns = [
     # about page url.
     path('about/', views.about, name='about'),
 
+    # contact page url.
+    path('contact/', views.contact, name='contact'),
+
     # individual product page url.
     path('<int:pk>/detail', views.detail, name='item_detail'),
 
@@ -68,6 +71,7 @@ urlpatterns = [
     
     # (backend_urls)
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('site_customization/', views.sitecustom, name='site-custom'),
     path('<int:pk>/password_change', views.password_change, name='password_change'),
     path('products/', views.products, name='products'),
     path('add_category', views.add_category, name='add_category'),
@@ -78,7 +82,10 @@ urlpatterns = [
     path('<int:pk>/update_profile', views.update_profile, name='update_profile'),
     path('contact_manager', views.contactManager, name='contact_manager'),
     path('email', views.emailManager, name='email_manager'),
-    
+    path('custom-order', views.customOrder, name='custom-order'),
+    path('<int:pk>/custom_order_view', views.customOrderView, name='custom_order_view'),
+    path('<int:pk>/custom_order_email', views.customOrderEmail, name='custom_order_email'),
+    path('<int:pk>/custom_order_delete', views.customOrderDelete, name='custom_order_delete'),
 
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),

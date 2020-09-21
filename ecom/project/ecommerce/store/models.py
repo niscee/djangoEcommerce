@@ -6,6 +6,19 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 #list of models
+class SiteInfo(models.Model):
+    logo = models.ImageField(null=True, blank=True)
+    about = models.TextField(null=True, blank=True)
+    
+    @property
+    def imageURL(self):
+        try:
+            url = self.logo.url
+        except:
+            url = ''
+        return url       
+           
+
 class Profile(models.Model):
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
     address = models.CharField(max_length=200, null=True, default=None)
@@ -98,7 +111,16 @@ class ShippingAddress(models.Model):
         return self.address
 
     
+class CustomOrder(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    date = models.DateField(auto_now=False, auto_now_add=False, verbose_name = 'Required Date')
+    size = models.TextField(null=True, blank=True, verbose_name = 'Size and Measurments')
+    extra_items = models.TextField(null=True, blank=True, verbose_name = 'Additional Items')
+    custom_details = models.TextField(null=True, blank=True, verbose_name = 'Customization Details')
+    materials = models.TextField(null=True, blank=True, verbose_name = 'Materials and Fabrics')
+    sent = models.BooleanField(default=False, null=True, blank=True)
 
+    
 
 
 """ list of signals """

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .models import *
-from .form import LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, UserUpdateForm, CategoryForm
+from .form import LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, UserUpdateForm, CategoryForm, SiteUpdateForm, CustomOrderForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
@@ -24,14 +24,42 @@ def store(request):
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
   
     products = Product.objects.filter(special=False)
+    site = SiteInfo.objects.all()[:1].get()
     specials = Product.objects.filter(special=True)
     category = Category.objects.all()
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category, 'site':site }
     return render(request, 'store/frontend/store.html', context)
+
+
+# contact page.
+def contact(request):
+    if request.method == "POST":
+        Customorder_form = CustomOrderForm(request.POST)
+        if Customorder_form.is_valid():
+            result = Customorder_form.save(commit=False)
+            result.user = request.user
+            result.save()
+            return redirect('contact')
+
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+        form = CustomOrderForm()
+    else:
+        form = {}
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+    
+    products = Product.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    # context = {'products':products, 'order':order, 'site':site, 'form':form }
+    context = {'form':form }
+    return render(request, 'store/frontend/contact.html', context)        
+
+
 
 # search item.
 def searchItem(request):
     item_name = request.GET.get('search')
+    site = SiteInfo.objects.all()[:1].get()
     products = Product.objects.filter(name__contains=item_name)
     category = Category.objects.all()
     specials = {}
@@ -40,31 +68,33 @@ def searchItem(request):
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'specials':specials, 'category':category, 'site':site }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by price highest first.
 def sortPriceHighest(request):
     products = Product.objects.order_by('-price')
     category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'category':category }
+    context = {'products':products, 'order':order, 'category':category, 'site':site }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by recent data first.
 def sortProductLatest(request):
     products = Product.objects.order_by('-id')
     category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'category':category }
+    context = {'products':products, 'order':order, 'category':category, 'site':site }
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -72,12 +102,13 @@ def sortProductLatest(request):
 def sortPriceLowest(request):
     products = Product.objects.order_by('price')
     category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'category':category }
+    context = {'products':products, 'order':order, 'category':category, 'site':site }
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -85,12 +116,13 @@ def sortPriceLowest(request):
 def sortCategory(request, pk):
     products = Product.objects.filter(category=pk)
     category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'category':category }
+    context = {'products':products, 'order':order, 'category':category, 'site':site }
     return render(request, 'store/frontend/search.html', context)    
 
 
@@ -103,7 +135,8 @@ def about(request):
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
     products = Product.objects.all()
-    context = {'products':products, 'order':order }
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'products':products, 'order':order, 'site':site }
     return render(request, 'store/frontend/about.html', context)    
 
 
@@ -115,7 +148,8 @@ def detail(request, pk):
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'product':product, 'order':order }
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'product':product, 'order':order, 'site':site }
     return render(request, 'store/frontend/detail.html', context)
 
 
@@ -127,7 +161,8 @@ def cart(request):
     else:
         items = [] 
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
-    context = {'items':items, 'order':order}
+    site = SiteInfo.objects.all()[:1].get()    
+    context = {'items':items, 'order':order, 'site':site}
     return render(request, 'store/frontend/cart.html', context)
 
 
@@ -140,7 +175,9 @@ def checkout(request):
     else:
         items = [] 
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
-    context = {'items':items, 'order':order}
+
+    site = SiteInfo.objects.all()[:1].get()    
+    context = {'items':items, 'order':order, 'site':site}
     return render(request, 'store/frontend/checkout.html', context)
 
 # order store and send email.
@@ -187,8 +224,9 @@ def checkoutForm(request):
         # email.send()
   
     items = [] 
+    site = SiteInfo.objects.all()[:1].get()
     order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
-    context = {'items':items, 'order':order}
+    context = {'items':items, 'order':order, 'site':site}
     return render(request, 'store/frontend/checkout.html', context)    
 
 
@@ -287,6 +325,21 @@ def orderList(request):
 def dashboard(request):
     context = {}
     return render(request,'store/backend/welcome.html', context)
+
+
+#site update page.   
+@login_required(login_url='/login/')  
+def sitecustom(request):
+    site = SiteInfo.objects.all()[:1].get()
+    if request.method == "POST":
+        form = SiteUpdateForm(request.POST, request.FILES, instance=site)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'site info updated!')
+            return redirect('site-custom')
+    form = SiteUpdateForm(instance=site)
+    context = {'form':form}
+    return render(request, 'store/backend/sitecustom.html', context)    
 
 
 #change password page.
@@ -460,4 +513,77 @@ def emailManager(request):
         email.send()
 
     return redirect('contact_manager')        
+
+
+#view custom order messages.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def customOrder(request):
+    orders = CustomOrder.objects.order_by('-id')
+    context = { 'orders':orders }
+    return render(request, 'store/backend/customorder.html', context)
+
+
+#view single custom order message.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def customOrderView(request, pk):
+    orders = CustomOrder.objects.get(id=pk)
+    context = { 'orders':orders }
+    return render(request, 'store/backend/customorderView.html', context)
+
+
+#sent custom order email message to admin.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def customOrderEmail(request, pk):
+    orders = CustomOrder.objects.get(id=pk)
+
+    #getting email of a user related to manager group 
+    group = Group.objects.get(name="manager")
+    usersList = group.user_set.all()
+    emails = []
+    for user in usersList:
+        emails.append(user.email)
+
+    #getting detail for the order   
+    date = orders.date
+    email = orders.user.email
+    user = orders.user
+    size = orders.size
+    materials = orders.materials
+    extra_items = orders.extra_items
+    custom_details = orders.custom_details
+    
+    #sending email
+    for email in emails:
+        template = render_to_string('store/backend/orderemail.html',{'date':date, 'email':email, 'user':user, 
+        'size':size, 'materials':materials, 'extra_items':extra_items, 'custom_details':custom_details})
+        email = EmailMessage(
+                'Amart (custom order message)',
+                    template,
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                )
+        email.fail_silently = False
+        email.send()
+
+    orders.sent = True
+    orders.save()
+    return redirect('custom-order')
+
+
+#custom order delete.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['store assistant'])   
+def customOrderDelete(request, pk):
+    if request.method == "POST":
+        try:
+            orders = CustomOrder.objects.get(id=pk)
+            orders.delete()
+            return redirect('custom-order')
+        except:
+            messages.warning(request, 'something went wrong!!')
+        return redirect('custom-order')    
+
     
