@@ -45,56 +45,52 @@ def searchItem(request):
 
 # sort item by price highest first.
 def sortPriceHighest(request):
-    products = Product.objects.order_by('-price').filter(special=False)
-    specials = Product.objects.order_by('-price').filter(special=True)
+    products = Product.objects.order_by('-price')
     category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 # sort item by recent data first.
 def sortProductLatest(request):
-    products = Product.objects.order_by('-id').filter(special=False)
-    specials = Product.objects.order_by('-id').filter(special=True)
+    products = Product.objects.order_by('-id')
     category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 
 # sort item by price Lowest first.
 def sortPriceLowest(request):
-    products = Product.objects.order_by('price').filter(special=False)
-    specials = Product.objects.order_by('price').filter(special=True)
+    products = Product.objects.order_by('price')
     category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'category':category }
     return render(request, 'store/frontend/search.html', context)
 
 
 # sort item by category.
 def sortCategory(request, pk):
     products = Product.objects.filter(category=pk)
-    specials = Product.objects.filter(special=True)
     category = Category.objects.all()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(user=request.user, complete=False)
     else:
         order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
 
-    context = {'products':products, 'order':order, 'specials':specials, 'category':category }
+    context = {'products':products, 'order':order, 'category':category }
     return render(request, 'store/frontend/search.html', context)    
 
 
