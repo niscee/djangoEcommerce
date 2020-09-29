@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.auth.models import User
 from .decorators import page_access
 from .filter import *
 import json
@@ -31,8 +32,8 @@ def store(request):
     return render(request, 'store/frontend/store.html', context)
 
 
-# contact page.
-def contact(request):
+# custom order page.
+def custom_order(request):
     if request.method == "POST":
         Customorder_form = CustomOrderForm(request.POST)
         if Customorder_form.is_valid():
@@ -52,7 +53,54 @@ def contact(request):
     site = SiteInfo.objects.all()[:1].get()
     # context = {'products':products, 'order':order, 'site':site, 'form':form }
     context = {'form':form }
-    return render(request, 'store/frontend/contact.html', context)        
+    return render(request, 'store/frontend/contact.html', context)  
+
+
+# contact page.
+def contact(request):
+    if request.method == "POST":
+        #getting email of a user related to store group 
+        group = Group.objects.get(name="store assistant")
+        usersList = group.user_set.all()
+        emails = []
+        for user in usersList:
+            emails.append(user.email)
+
+        #getting detail for the order   
+        message = request.POST.get('message')
+        
+        #sending email
+        for email in emails:
+            template = render_to_string('store/frontend/emailbody.html',{'message':message})
+            email = EmailMessage(
+                    'Amart (customer message)',
+                        template,
+                        settings.EMAIL_HOST_USER,
+                        [email],
+                    )
+            email.fail_silently = False
+            email.send()
+                
+
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(user=request.user, complete=False)
+        form = CustomOrderForm()
+    else:
+        form = {}
+        order = {'get_cartTotalItems':0, 'get_cartTotalPrice':0}
+    
+    #getting manager group user.
+    manager_group = Group.objects.get(name="manager")
+    managers = manager_group.user_set.all()
+    
+    #getting store group user.
+    store_group = Group.objects.get(name="store assistant")
+    stores = store_group.user_set.all()
+
+    products = Product.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'products':products, 'order':order, 'site':site, 'form':form, 'managers':managers, 'stores':stores}
+    return render(request, 'store/frontend/contactemail.html', context)          
 
 
 
@@ -211,17 +259,18 @@ def checkoutForm(request):
         order.complete = True
         order.save()
         
-        # sending email
-        # template = render_to_string('store/frontend/emailbody.html',{'name':request.user.username})
-        # email = EmailMessage(
+        #sending email
+        template = render_to_string('store/frontend/emailbody.html',{'message':"Thank you, Your Delivery is on the way."})
+        email = EmailMessage(
             
-        #             'Thank You',
-        #             template,
-        #             settings.EMAIL_HOST_USER,
-        #             [request.user.email],
-        #         )
-        # email.fail_silently = False
-        # email.send()
+                    'Thank You',
+                    template,
+                    settings.EMAIL_HOST_USER,
+                    [request.user.email],
+                )
+        email.fail_silently = False
+        email.send()
+        messages.success(request, 'Thank You, We will contact you!!')
   
     items = [] 
     site = SiteInfo.objects.all()[:1].get()
@@ -307,11 +356,11 @@ def logout_view(request):
 
 
 """ List of backend controller """  
-#order list page.   
+#order list page (customer).   
 @login_required(login_url='/login/')  
 def orderList(request):
     try:
-        # order = Order.objects.get(user=request.user, complete=True)
+        # items = Order.objects.get(user=request.user, complete=True)
         items = OrderItem.objects.filter(user=request.user)
         context = { 'items':items }
         return render(request, 'store/backend/orderhistory.html', context)
@@ -407,7 +456,7 @@ def add_category(request):
     return render(request, 'store/backend/add_category.html', context)  
 
 
-#product delete function.   
+#category delete function.   
 @login_required(login_url='/login/') 
 @page_access(allowed=['manager','store assistant'])   
 def delete_category(request, pk):
@@ -587,3 +636,29 @@ def customOrderDelete(request, pk):
         return redirect('custom-order')    
 
     
+#delivery product status.   
+@login_required(login_url='/login/') 
+@page_access(allowed=['manager'])   
+def deliveryList(request):
+    products = ShippingAddress.objects.order_by('-id')
+    context = {'products':products}
+    return render(request, 'store/backend/delivery_page.html', context) 
+
+
+#edit delivery status.
+@login_required(login_url='/login/')  
+def changeStatus(request, pk):
+    product = ShippingAddress.objects.get(id=pk)
+    context= {'product':product}
+    return render(request, 'store/backend/delivery_status.html', context) 
+
+#update delivery status.
+@login_required(login_url='/login/')  
+def updateStatus(request, pk):
+    if request.method == "POST":
+        product = ShippingAddress.objects.get(id=pk)
+        status = request.POST.get('delivery_status')
+        product.delivery_status = status
+        product.save()
+        messages.success(request, 'Status Updated!!')
+    return redirect('deliveryList')     

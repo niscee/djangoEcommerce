@@ -16,6 +16,7 @@
             <th>Date</th>
             <th>Total</th>
             <th>Image</th>
+            <th>Status</th>
         </tr>
     </thead>
     <tbody>
@@ -29,7 +30,10 @@
             <td>{{ item.date_added }}</td>
             <td>${{ item.get_totalPrice|floatformat:2 }}</td>
             <td><img src="{{ item.product.imageURL }}" alt="product_image" class="img-thumbnail"
-                    style="height:80px; width:120px;"></td>
+                    style="height:80px; width:120px;"></td> 
+            {% for i in item.order.shippingaddress_set.all %}               
+            <td>{{i.delivery_status}}</td> 
+            {% endfor %}       
         </tr>
         {% endfor %}
         {% else %}

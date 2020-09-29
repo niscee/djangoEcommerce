@@ -35,6 +35,9 @@ urlpatterns = [
     # about page url.
     path('about/', views.about, name='about'),
 
+    # custom-order page url.
+    path('custom-order/', views.custom_order, name='ustom-order-contact'),
+
     # contact page url.
     path('contact/', views.contact, name='contact'),
 
@@ -86,6 +89,9 @@ urlpatterns = [
     path('<int:pk>/custom_order_view', views.customOrderView, name='custom_order_view'),
     path('<int:pk>/custom_order_email', views.customOrderEmail, name='custom_order_email'),
     path('<int:pk>/custom_order_delete', views.customOrderDelete, name='custom_order_delete'),
+    path('delivery_list', views.deliveryList, name='deliveryList'),
+    path('<int:pk>/change_delivery_status', views.changeStatus, name='change_delivery_status'),
+    path('<int:pk>/change_delivery_status_update', views.updateStatus, name='change_delivery_status_update'),
 
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),

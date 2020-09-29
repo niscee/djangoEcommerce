@@ -59,6 +59,7 @@ class Order(models.Model):
     date_ordered = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False)
     transaction_id = models.UUIDField(default=uuid.uuid4, editable = False, unique=True)
+
    
 
     def __str__(self):
@@ -106,6 +107,7 @@ class ShippingAddress(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
     address = models.CharField(max_length=200)
     city = models.CharField(max_length=200)
+    delivery_status = models.CharField(max_length=200, null=True, blank=True, default="pending")
 
     def __str__(self):
         return self.address
@@ -113,7 +115,7 @@ class ShippingAddress(models.Model):
     
 class CustomOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    date = models.DateField(auto_now=False, auto_now_add=False, verbose_name = 'Required Date')
+    date = models.DateField(auto_now=False, auto_now_add=False, verbose_name = 'Required Date', help_text = "Please use the following format: <em>YYYY-MM-DD</em>.")
     size = models.TextField(null=True, blank=True, verbose_name = 'Size and Measurments')
     extra_items = models.TextField(null=True, blank=True, verbose_name = 'Additional Items')
     custom_details = models.TextField(null=True, blank=True, verbose_name = 'Customization Details')

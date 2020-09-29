@@ -80,6 +80,9 @@
 					<a href="{% url 'add_product' %}">
 						<li class="list-group-item">Add Product</li>
 					</a>
+					<a href="{% url 'deliveryList' %}">
+						<li class="list-group-item">Delivery Status</li>
+					</a>
 					{% endif %}
 
 					{% if request.user.groups.all.0.name == "store assistant" %}

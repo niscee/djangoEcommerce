@@ -46,9 +46,14 @@ class SiteUpdateForm(forms.ModelForm):
 
 
 class CustomOrderForm(forms.ModelForm):
+    date = forms.DateField()
     class Meta:
         model = CustomOrder
-        fields = ['size', 'date', 'extra_items', 'custom_details', 'materials']                
+        widgets = {
+            'date': forms.TextInput(attrs={'placeholder': 'format: 2019-12-16'})
+        }
+        fields = ['size', 'date', 'extra_items', 'custom_details', 'materials'] 
+                      
 
 
 

@@ -1,0 +1,83 @@
+{% extends 'store/frontend/main2.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="col-lg-6 col-md-6">
+
+        <div class="" style="margin:auto; text-align: center;margin-top:5px;">
+            {% if error_messages  %}
+            {% for msg in error_messages  %}
+            <div class="alert alert-{{msg.tags}}">
+                {{msg}}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="box-element product">
+
+            {% for manager in managers %}
+            <p class="alert alert-warning" style="text-align: center; font-weight: bold;">Manager Contact List</p>
+            <div class="card" style="margin-top:2px;">
+                <div class="card-body">
+                    <h5 class="card-title">{{manager.username}}</h5>
+                    <p class="card-text">{{manager.email}}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% for store in stores %}
+            <p class="alert alert-warning" style="text-align: center; font-weight: bold;margin-top: 20px;">Store Assistant Contact List</p>
+            <div class="card" style="margin-top:2px;">
+                <div class="card-body">
+                    <h5 class="card-title">{{store.username}}</h5>
+                    <p class="card-text">{{store.email}}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-6">
+        
+        
+        <div class="" style="margin:auto; text-align: center;margin-top:5px;">
+            {% if error_messages  %}
+            {% for msg in error_messages  %}
+            <div class="alert alert-{{msg.tags}}">
+                {{msg}}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="box-element product">
+            
+            {% if user.is_authenticated %}
+            <form action="{% url 'contact' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1"><b>Message:</b></label>
+                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="12" name="message"></textarea>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Send</button>
+            </form>
+            {% else %}
+                <p class="alert alert-danger">You need to login!!</p>
+            {% endif %}
+
+        </div>
+        
+
+    </div>
+
+
+
+</div>
+
+{% endblock %}
