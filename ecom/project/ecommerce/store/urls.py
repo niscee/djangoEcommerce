@@ -71,7 +71,22 @@ urlpatterns = [
     # sort product based on category.
     path('<int:pk>/category/', views.sortCategory, name='sortCategory'),
 
-    
+    #bulk customization.
+    path('<int:pk>/bulk_product_customize', views.customizeBulkProduct, name='bulk_product_customize'),
+
+    #payment integration.
+    path('payment', views.payment, name='payment'),
+
+    #payment confirmation.
+    path('<int:pk>/payment_confirmation', views.paymentConfirmation, name='paymentConfirmation'),
+
+
+
+
+
+
+
+
     # (backend_urls)
     path('dashboard/', views.dashboard, name='dashboard'),
     path('site_customization/', views.sitecustom, name='site-custom'),
@@ -95,6 +110,8 @@ urlpatterns = [
 
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),
+
+ 
 
 ]
 

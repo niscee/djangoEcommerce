@@ -1,0 +1,83 @@
+{% extends 'store/frontend/main2.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="col-lg-10" style="margin: auto">
+    <div class="box-element product">
+
+        <div id="paypal-button" style="width: 400px; margin: auto">
+            <img src="{% static 'images/paypal-image.png' %}" style="width:400px; margin: auto;padding: 20px;">
+        </div>
+
+        <script src="https://www.paypalobjects.com/api/checkout.js"></script>
+        <script>
+
+            
+            total = `{{total}}`
+
+            paypal.Button.render({
+                // Configure environment
+                env: 'sandbox',
+                client: {
+                    sandbox: 'AYwDuOM5E_MEoVnWVOauwtaJCkPz1V-19jr8n72b_FBKtb6v4MRXSsjW6b82MrmENayaEvN341Y90A2x',
+                    production: 'demo_production_client_id'
+                },
+                // Customize button (optional)
+                locale: 'en_US',
+                style: {
+                    size: 'large',
+                    color: 'gold',
+                    shape: 'pill',
+
+                },
+
+                // Enable Pay Now checkout flow (optional)
+                commit: true,
+
+                // Set up a payment
+                payment: function (data, actions) {
+                    return actions.payment.create({
+                        transactions: [{
+                            amount: {
+                                total: total,
+                                currency: 'USD'
+                            }
+                        }]
+                    });
+                },
+                // Execute the payment
+                onAuthorize: function (data, actions) {
+                    return actions.payment.execute().then(function () {
+                        
+                        window.alert('success');
+                        
+                        btn1 = document.getElementById('paypal-button');
+                        btn1.style.display = "none";
+
+                        btn = document.getElementById('confirm');
+                        btn.style.display = "block";
+                    });
+                }
+            }, '#paypal-button');
+
+        </script>
+
+        <div id="confirm" style="width: 600px; margin: auto; display: none">
+            <h4 style="text-align: center; font-weight: bold;"><u>Click confirm button to finish the process.</u></h4>
+            <img src="{% static 'images/paymentconfirmed.png' %}" style="width:600px; margin: auto;padding: 20px;">
+            
+            <form action="{% url 'paymentConfirmation' order.id %}" method="POST">
+                {% csrf_token %}
+                <button style="display: block; width: 550px; margin: auto"
+                    class="btn btn-block btn-success" type="submit">CONFIRMED</button>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+{% endblock %}

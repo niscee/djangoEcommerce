@@ -59,6 +59,8 @@ class Order(models.Model):
     date_ordered = models.DateTimeField(auto_now_add=True)
     complete = models.BooleanField(default=False)
     transaction_id = models.UUIDField(default=uuid.uuid4, editable = False, unique=True)
+    payment = models.BooleanField(default=False)
+    
 
    
 
@@ -70,6 +72,7 @@ class Order(models.Model):
     def get_cartTotalPrice(self):
         orderitems = self.orderitem_set.all()
         totalPrice = sum([item.get_totalPrice for item in orderitems])
+        totalPrice = totalPrice + (totalPrice*8)/100
         return totalPrice   
     
     #getting total nuber of items in cart
@@ -79,11 +82,15 @@ class Order(models.Model):
         totalItems = sum([item.quantity for item in orderitems])
         return totalItems 
           
+# class Token(models.Model):
+#     token = models.CharField(max_length=200)
+#     valid = models.BooleanField(default=False) 
 
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+    # order = models.ForeignKey(Token, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -121,6 +128,9 @@ class CustomOrder(models.Model):
     custom_details = models.TextField(null=True, blank=True, verbose_name = 'Customization Details')
     materials = models.TextField(null=True, blank=True, verbose_name = 'Materials and Fabrics')
     sent = models.BooleanField(default=False, null=True, blank=True)
+
+
+  
 
     
 
