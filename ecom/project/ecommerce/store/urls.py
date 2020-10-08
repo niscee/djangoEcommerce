@@ -41,6 +41,7 @@ urlpatterns = [
     # contact page url.
     path('contact/', views.contact, name='contact'),
 
+
     # individual product page url.
     path('<int:pk>/detail', views.detail, name='item_detail'),
 
@@ -80,6 +81,12 @@ urlpatterns = [
     #payment confirmation.
     path('<int:pk>/payment_confirmation', views.paymentConfirmation, name='paymentConfirmation'),
 
+    #coupon code.
+    path('<int:pk>/coupon_code', views.couponCode, name='coupon_code'),
+
+    #coupon code submission.
+    path('coupon_code_submission', views.couponSubmission, name='coupon_code_submission'),
+
 
 
 
@@ -111,6 +118,8 @@ urlpatterns = [
     # order history of individual customer url.
     path('order_list', views.orderList, name='order_list'),
 
+    #customer message to manager.
+    path('customer_msg', views.customerMsgList, name='customer_msg'),
  
 
 ]

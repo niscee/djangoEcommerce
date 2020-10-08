@@ -72,7 +72,7 @@ class Order(models.Model):
     def get_cartTotalPrice(self):
         orderitems = self.orderitem_set.all()
         totalPrice = sum([item.get_totalPrice for item in orderitems])
-        totalPrice = totalPrice + (totalPrice*8)/100
+        totalPrice = totalPrice + (totalPrice*2)/100
         return totalPrice   
     
     #getting total nuber of items in cart
@@ -81,28 +81,40 @@ class Order(models.Model):
         orderitems = self.orderitem_set.all()
         totalItems = sum([item.quantity for item in orderitems])
         return totalItems 
-          
-# class Token(models.Model):
-#     token = models.CharField(max_length=200)
-#     valid = models.BooleanField(default=False) 
+
+
+class Token(models.Model):
+    code = models.CharField(max_length=200)
+    valid = models.BooleanField(default=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    stock = models.IntegerField(null=True) 
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+
 
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
-    # order = models.ForeignKey(Token, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    code = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-date_added']
+        
 
     #getting total price of the single order item
     @property
     def get_totalPrice(self):
-        total = self.product.price * self.quantity
-        return total   
+        if self.code == False:
+            total = self.product.price * self.quantity
+            return total 
+
+        total = self.product.price * self.quantity - ((self.product.price * self.quantity)*20)/100
+        return total     
+
 
     def __str__(self):
         return str(self.order)              
@@ -115,6 +127,7 @@ class ShippingAddress(models.Model):
     address = models.CharField(max_length=200)
     city = models.CharField(max_length=200)
     delivery_status = models.CharField(max_length=200, null=True, blank=True, default="pending")
+    finalTotal = models.FloatField(default=0)
 
     def __str__(self):
         return self.address
@@ -130,7 +143,10 @@ class CustomOrder(models.Model):
     sent = models.BooleanField(default=False, null=True, blank=True)
 
 
-  
+class CustomerContactManager(models.Model):
+    messages = models.TextField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    seen = models.BooleanField(default=False, null=True, blank=True)
 
     
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Product, Profile, Category, SiteInfo, CustomOrder
+from .models import Product, Profile, Category, SiteInfo, CustomOrder, CustomerContactManager
 
 # Create the form class.
 class RegisterForm(UserCreationForm):
@@ -53,6 +53,12 @@ class CustomOrderForm(forms.ModelForm):
             'date': forms.TextInput(attrs={'placeholder': 'format: 2019-12-16'})
         }
         fields = ['size', 'date', 'extra_items', 'custom_details', 'materials'] 
+
+
+class ContactManagerForm(forms.ModelForm):
+    class Meta:
+        model = CustomerContactManager
+        fields = ['messages']
                       
 
 

@@ -40,15 +40,22 @@
                 <div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div>
                 <div style="flex:1">
                     <p class="quantity">{{item.quantity}}</p>
-                    <div class="quantity">
-                        <img data-product="{{item.product.id}}" data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}">
-                
-                        <img data-product="{{item.product.id}}" data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}">
-                    </div>
+                    
+                    {% if item.code %}
+                    
+                    {% else %}
+                        <div class="quantity">
+                            <img data-product="{{item.product.id}}" data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}">
+                    
+                            <img data-product="{{item.product.id}}" data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}">
+                        </div>
+                    {% endif %}  
+                      
                 </div>
                 <div style="flex:1"><p>${{item.get_totalPrice|floatformat:2}}</p></div>
                 <div style="flex:1">
                     <button data-product="{{item.product.id}}"  data-action="delete" class="btn btn-outline-danger btn-sm add-btn update-cart">Delete</button>
+                    <a href="{% url 'coupon_code' item.product.id %}"><button class="btn btn-outline-primary btn-sm add-btn update-cart">coupon</button></a>
                 </div>
             </div>
             {% endfor %}

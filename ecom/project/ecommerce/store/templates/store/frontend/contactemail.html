@@ -59,12 +59,9 @@
         <div class="box-element product">
             
             {% if user.is_authenticated %}
-            <form action="{% url 'contact' %}" method="POST">
+            <form action="" method="POST">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="exampleFormControlTextarea1"><b>Message:</b></label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="12" name="message"></textarea>
-                </div>
+                {{form|crispy}}
                 <button class="btn btn-primary btn-block" type="submit">Send</button>
             </form>
             {% else %}
