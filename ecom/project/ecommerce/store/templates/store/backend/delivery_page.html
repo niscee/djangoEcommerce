@@ -23,12 +23,12 @@
         <tr>
             <td>{{product.user}}</td>
             <td>{{product.address}}</td>
-            <td>{{product.order}}</td>
+            <td>{{product.id}}</td>
             <td>{{product.city}}</td>
-            {% if product.delivery_status == "pending" %}
-            <td style="color:red;">{{product.delivery_status}}</td>
-            {% else %}
+            {% if product.delivery_status == "Delivered" %}
             <td style="color:green;">{{product.delivery_status}}</td>
+            {% else %}
+            <td style="color:red;">{{product.delivery_status}}</td>
             {% endif %}
             <td><a href="{% url 'change_delivery_status' product.id %}"><button class="btn btn-primary">CHANGE</button></a></td>
         </tr>

@@ -32,9 +32,9 @@
         {% for product in products %}
         <tr>
             {% if product.special == True %}
-            <td>{{ product.name }} <span class="badge badge-danger">special</span></td>
+            <td>{{ product.product_code }} <span class="badge badge-danger">special</span></td>
             {% else %}
-            <td>{{ product.name }}</td>
+            <td>{{ product.product_code }}</td>
             {% endif %}
             <td>${{ product.price|floatformat:2 }}</td>
             <td><img src="{{ product.imageURL }}" alt="product_image" class="img-thumbnail"

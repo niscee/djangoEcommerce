@@ -78,14 +78,15 @@ urlpatterns = [
     #payment integration.
     path('payment', views.payment, name='payment'),
 
-    #payment confirmation.
-    path('<int:pk>/payment_confirmation', views.paymentConfirmation, name='paymentConfirmation'),
-
     #coupon code.
     path('<int:pk>/coupon_code', views.couponCode, name='coupon_code'),
 
     #coupon code submission.
     path('coupon_code_submission', views.couponSubmission, name='coupon_code_submission'),
+
+
+    #payment confirmation.
+    path('<int:pk>/payment_confirmation', views.paymentConfirmation, name='paymentConfirmation'),
 
 
 

@@ -12,11 +12,25 @@
     {% csrf_token %}
     <label for="exampleFormControlSelect1">Status:</label>
     <select class="form-control" name="delivery_status">
+
       {% if product.delivery_status == "pending" %}  
       <option>{{product.delivery_status}}</option>
+      <option>Under Packing</option>
+      <option>Loading & Shipping</option>
       <option>Delivered</option>
-      {% else %}
+      
+      {% elif product.delivery_status == "Under Packing" %}
+      <option>{{product.delivery_status}}</option>
+      <option>Loading & Shipping</option>
       <option aria-readonly="true">Delivered</option>
+
+      {% elif product.delivery_status == "Loading & Shipping" %}
+      <option>{{product.delivery_status}}</option>
+      <option aria-readonly="true">Delivered</option>
+
+      {% else %}
+      <option>{{product.delivery_status}}</option>
+
       {% endif %}
     </select><br>
     <button class="btn btn-outline-primary btn-block">submit</button>

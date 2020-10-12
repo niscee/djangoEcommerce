@@ -1,6 +1,9 @@
 from django.template.loader import render_to_string
+#fetch enviornment variable. 
 from django.conf import settings
 from django.core.mail import EmailMessage
+
+
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -21,9 +24,9 @@ import json
 
 
 """ List of frontend controller """
-# home page.
 
 
+#site landing page.
 def store(request):
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
@@ -40,55 +43,21 @@ def store(request):
     return render(request, 'store/frontend/store.html', context)
 
 
-# payment page.
-def payment(request):
+#about page.
+def about(request):
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
             user=request.user, complete=False)
-        total = int(order.get_cartTotalPrice)    
     else:
         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-        total = 0
 
     products = Product.objects.all()
     site = SiteInfo.objects.all()[:1].get()
-    context = {'products': products, 'order': order, 'site': site, 'total': total}
-    return render(request, 'store/frontend/paypal.html', context)    
+    context = {'products': products, 'order': order, 'site': site}
+    return render(request, 'store/frontend/about.html', context)
 
 
-
-# payment confirmation.
-def paymentConfirmation(request, pk):
-    order = Order.objects.get(id=pk)
-    order.complete = True
-    order.save()
-    
-    #set token to invalid.
-    token = order.token_set.all()
-    for i in token:
-        i.valid = False
-        i.save()
-
-    # #sending email
-        # template = render_to_string('store/frontend/bill.html', {
-        #                             'message': "Thank you, Your Delivery is on the way.", 'cartItems': cartItem, 'user': request.user, 'finalTotal': finalTotal})
-        # email = EmailMessage(
-
-        #     'Amart Furniture',
-        #     template,
-        #     settings.EMAIL_HOST_USER,
-        #     [request.user.email],
-        # )
-        # email.fail_silently = False
-        # email.send()
-        # messages.success(request, 'Thank You, We will contact you!!')    
-
-    return redirect('store')
-     
-
-
-
-# custom order page.
+#custom design page.
 def custom_order(request):
     if request.method == "POST":
         Customorder_form = CustomOrderForm(request.POST)
@@ -113,7 +82,8 @@ def custom_order(request):
     return render(request, 'store/frontend/contact.html', context)
 
 
-#contact page.
+
+#site contact page.
 def contact(request):
     if request.method == "POST":
         contact_form = ContactManagerForm(request.POST)
@@ -145,7 +115,417 @@ def contact(request):
     context = {'products': products, 'order': order, 'site': site,
                 'managers': managers, 'stores': stores, 'form': form}
 
-    return render(request, 'store/frontend/contactemail.html', context)    
+    return render(request, 'store/frontend/contactemail.html', context)
+
+
+
+
+
+#product detail page.
+def detail(request, pk):
+    product = Product.objects.get(id=pk)
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'product': product, 'order': order, 'site': site}
+    return render(request, 'store/frontend/detail.html', context)
+
+
+
+#bulk request page, generate token and special discount, email user along with the token.
+def customizeBulkProduct(request, pk):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+
+        if request.method == "POST":
+            stock = request.POST.get('qty')
+            product = Product.objects.get(id=pk)
+            
+            #generate token.
+            product_name = product.name[:2]
+            token = (request.user.username[:2] + product_name.upper() + str(stock)).upper()
+
+            form = Token(stock=stock, product=product, user=request.user, code=token, order=order)
+            form.save()
+
+            #sending email
+            template = render_to_string('store/frontend/tokenmsg.html', {
+                                        'user': request.user, 'token': token})
+            email = EmailMessage(
+
+                'Amart Furniture',
+                template,
+                settings.EMAIL_HOST_USER,
+                [request.user.email],
+            )
+            email.fail_silently = False
+            email.send()
+
+            messages.success(request, 'Thank You, We will email you soon!!')
+               
+        
+    else:
+        form = {}
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    product = Product.objects.get(id=pk)
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'product':product, 'order':order, 'site':site}
+    return render(request, 'store/frontend/bulkcustomization.html', context)    
+
+
+
+#coupon code form.
+def couponCode(request, pk):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+        items = order.orderitem_set.all()
+        
+    else:
+        return redirect('store')
+
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'items': items, 'order': order, 'site': site, 'pk':pk}
+    return render(request, 'store/frontend/bulkcart.html', context)
+
+
+
+#validate submitted coupon and store.
+def couponSubmission(request):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+           
+
+        if request.method == "POST":
+            code = request.POST.get('token')
+
+            p_id = request.POST.get('product')
+            product = Product.objects.get(id=p_id)
+
+            try:
+                check = Token.objects.get(code=code)
+        
+                if check.valid == True:
+                    qty = check.stock
+                    items = order.orderitem_set.all()
+
+                    for i in items:
+                        if i.product == product:
+                            i.quantity += qty - 1
+                            i.code = True
+                            i.save()
+
+                return redirect('cart') 
+
+            except Token.DoesNotExist:
+                return redirect('store')
+
+
+    
+
+
+
+
+""" get called when 'add to cart' event is initiated, get product id 
+and action type from button attributes and update the quantity of individual product. """
+
+
+def updateItem(request):
+    data = json.loads(request.body)
+    productId = data['productId']
+    productAction = data['productAction']
+    product = Product.objects.get(id=productId)
+    order, created = Order.objects.get_or_create(
+        user=request.user, complete=False)
+    orderItem, created = OrderItem.objects.get_or_create(
+        order=order, product=product, user=request.user)
+
+    if productAction == 'add':
+        orderItem.quantity += 1
+
+    elif productAction == 'remove':
+        orderItem.quantity -= 1
+
+    elif productAction == 'delete':
+        orderItem.delete()
+        return JsonResponse('item added', safe=False)
+
+    orderItem.save()
+
+    if orderItem.quantity < 1:
+        orderItem.delete()
+
+    return JsonResponse('item added', safe=False)
+
+
+
+
+#cart details.
+def cart(request):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+        items = order.orderitem_set.all()
+    else:
+        items = []
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'items': items, 'order': order, 'site': site}
+    return render(request, 'store/frontend/cart.html', context)
+
+
+
+
+#checkout page.
+def checkout(request):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+        items = order.orderitem_set.all()
+    else:
+        items = []
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'items': items, 'order': order, 'site': site}
+    return render(request, 'store/frontend/checkout.html', context)
+
+
+
+
+#add user address and redirect to payment process.
+def checkoutForm(request):
+    if request.user.is_authenticated:
+        address = request.POST.get('address')
+        city = request.POST.get('city')
+        order = Order.objects.get(user=request.user, complete=False)
+        cartItem = order.orderitem_set.all()
+
+        # get total purchase amount and sent through email.
+        if address.upper() == "SYDNEY":
+            CHARGE = 20
+        else:
+            CHARGE = 60
+
+        finalTotal = int(order.get_cartTotalPrice + CHARGE)
+
+        # checking if the cart item is available in the store
+        for cart in cartItem:
+            product = Product.objects.get(id=cart.product.id)
+            if product.stock < cart.quantity:
+                messages.warning(
+                    request, f'{product.name} is out of stock. only {product.stock} is available.')
+                return redirect('checkout')
+
+        # updating the product stock after order.
+        for cart in cartItem:
+            product = Product.objects.get(id=cart.product.id)
+            product.stock -= cart.quantity
+            product.save()
+
+        form = ShippingAddress(
+            user=request.user, order=order, address=address, city=city, finalTotal=finalTotal)
+        form.save()
+
+    items = []
+    site = SiteInfo.objects.all()[:1].get()
+    order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+    context = {'items': items, 'order': order, 'site': site}
+    return redirect('payment')
+
+
+
+#site payment page.
+def payment(request):
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+        total = int(order.get_cartTotalPrice)    
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+        total = 0
+
+    products = Product.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    context = {'products': products, 'order': order, 'site': site, 'total': total}
+    return render(request, 'store/frontend/paypal.html', context)    
+
+
+
+#render html page to pdf.
+from io import BytesIO
+from django.http import HttpResponse
+from django.template.loader import get_template
+import xhtml2pdf.pisa as pisa
+
+def render_pdf(path, params):
+    template = get_template(path)
+    html = template.render(params)
+    response = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
+    if not pdf.err:
+        return HttpResponse(response.getvalue(), content_type='application/pdf')
+    else:
+        return HttpResponse("Error Rendering PDF", status=400)
+
+
+
+#confirm payment, set order complete to True and clear the cart.
+def paymentConfirmation(request, pk):
+    order = Order.objects.get(id=pk)
+    order.complete = True
+    order.save()
+
+    items = order.orderitem_set.all()
+    
+    #set token to invalid.
+    token = order.token_set.all()
+    for i in token:
+        i.valid = False
+        i.save()
+
+    name = request.user
+
+    #calling above render function.
+    params = {
+        'items': items,
+        'order': order,
+        'username' : name,
+        'email' : request.user.email,
+    }
+
+    pdf = render_pdf('store/frontend/pdf.html', params)
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "Invoice_%s.pdf" %("12341231")
+        content = "inline; filename='%s'" %(filename)
+        download = request.GET.get("download")
+        if download:
+            content = "attachment; filename='%s'" %(filename)
+        response['Content-Disposition'] = content
+        return response
+    return HttpResponse("Not found")    
+
+       
+
+    # #sending email
+        # template = render_to_string('store/frontend/bill.html', {
+        #                             'message': "Thank you, Your Delivery is on the way.", 'cartItems': cartItem, 'user': request.user, 'finalTotal': finalTotal})
+        # email = EmailMessage(
+
+        #     'Amart Furniture',
+        #     template,
+        #     settings.EMAIL_HOST_USER,
+        #     [request.user.email],
+        # )
+        # email.fail_silently = False
+        # email.send()
+        # messages.success(request, 'Thank You, We will contact you!!')    
+
+    return redirect('store')
+     
+
+
+
+#search item (search box navbar).
+def searchItem(request):
+    item_name = request.GET.get('search')
+    site = SiteInfo.objects.all()[:1].get()
+    products = Product.objects.filter(name__icontains=item_name) | Product.objects.filter(product_code__icontains=item_name)
+    category = Category.objects.all()
+    specials = {}
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    context = {'products': products, 'order': order,
+               'specials': specials, 'category': category, 'site': site}
+    return render(request, 'store/frontend/search.html', context)
+
+
+
+
+#sort by price <highest>.
+def sortPriceHighest(request):
+    products = Product.objects.order_by('-price')
+    category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    context = {'products': products, 'order': order,
+               'category': category, 'site': site}
+    return render(request, 'store/frontend/search.html', context)
+
+
+
+
+#sortby recent item.
+def sortProductLatest(request):
+    products = Product.objects.order_by('-id')
+    category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    context = {'products': products, 'order': order,
+               'category': category, 'site': site}
+    return render(request, 'store/frontend/search.html', context)
+
+
+
+
+
+# sortby price <lowest>.
+def sortPriceLowest(request):
+    products = Product.objects.order_by('price')
+    category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    context = {'products': products, 'order': order,
+               'category': category, 'site': site}
+    return render(request, 'store/frontend/search.html', context)
+
+
+
+
+#sortby category.
+def sortCategory(request, pk):
+    products = Product.objects.filter(category=pk)
+    category = Category.objects.all()
+    site = SiteInfo.objects.all()[:1].get()
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user, complete=False)
+    else:
+        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
+
+    context = {'products': products, 'order': order,
+               'category': category, 'site': site}
+    return render(request, 'store/frontend/search.html', context)
+
+
+    
 
 
 
@@ -200,334 +580,27 @@ def contact(request):
 
 
 
-# search item.
-def searchItem(request):
-    item_name = request.GET.get('search')
-    site = SiteInfo.objects.all()[:1].get()
-    products = Product.objects.filter(name__contains=item_name)
-    category = Category.objects.all()
-    specials = {}
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
 
-    context = {'products': products, 'order': order,
-               'specials': specials, 'category': category, 'site': site}
-    return render(request, 'store/frontend/search.html', context)
 
-
-
-
-# sort item by price highest first.
-def sortPriceHighest(request):
-    products = Product.objects.order_by('-price')
-    category = Category.objects.all()
-    site = SiteInfo.objects.all()[:1].get()
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    context = {'products': products, 'order': order,
-               'category': category, 'site': site}
-    return render(request, 'store/frontend/search.html', context)
-
-
-
-
-# sort item by recent data first.
-def sortProductLatest(request):
-    products = Product.objects.order_by('-id')
-    category = Category.objects.all()
-    site = SiteInfo.objects.all()[:1].get()
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    context = {'products': products, 'order': order,
-               'category': category, 'site': site}
-    return render(request, 'store/frontend/search.html', context)
-
-
-
-
-
-# sort item by price Lowest first.
-def sortPriceLowest(request):
-    products = Product.objects.order_by('price')
-    category = Category.objects.all()
-    site = SiteInfo.objects.all()[:1].get()
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    context = {'products': products, 'order': order,
-               'category': category, 'site': site}
-    return render(request, 'store/frontend/search.html', context)
-
-
-
-
-# sort item by category.
-def sortCategory(request, pk):
-    products = Product.objects.filter(category=pk)
-    category = Category.objects.all()
-    site = SiteInfo.objects.all()[:1].get()
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    context = {'products': products, 'order': order,
-               'category': category, 'site': site}
-    return render(request, 'store/frontend/search.html', context)
-
-
-# about page.
-def about(request):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    products = Product.objects.all()
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'products': products, 'order': order, 'site': site}
-    return render(request, 'store/frontend/about.html', context)
-
-
-
-# bulk customization page.
-def customizeBulkProduct(request, pk):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-
-        if request.method == "POST":
-            stock = request.POST.get('qty')
-            product = Product.objects.get(id=pk)
-            
-            #generate token.
-            product_name = product.name[:2]
-            token = (request.user.username[:2] + product_name.upper() + str(stock)).upper()
-
-            form = Token(stock=stock, product=product, user=request.user, code=token, order=order)
-            form.save()
-
-            #sending email
-            template = render_to_string('store/frontend/tokenmsg.html', {
-                                        'user': request.user, 'token': token})
-            email = EmailMessage(
-
-                'Amart Furniture',
-                template,
-                settings.EMAIL_HOST_USER,
-                [request.user.email],
-            )
-            email.fail_silently = False
-            email.send()
-
-            messages.success(request, 'Thank You, We will email you soon!!')
-               
-        
-    else:
-        form = {}
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    product = Product.objects.get(id=pk)
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'product':product, 'order':order, 'site':site}
-    return render(request, 'store/frontend/bulkcustomization.html', context)
-
-
-# coupon code submission.
-def couponSubmission(request):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-           
-
-        if request.method == "POST":
-            code = request.POST.get('token')
-
-            p_id = request.POST.get('product')
-            product = Product.objects.get(id=p_id)
-
-            try:
-                check = Token.objects.get(code=code)
-        
-                if check.valid == True:
-                    qty = check.stock
-                    items = order.orderitem_set.all()
-
-                    for i in items:
-                        if i.product == product:
-                            i.quantity += qty - 1
-                            i.code = True
-                            i.save()
-
-                return redirect('cart') 
-
-            except Token.DoesNotExist:
-                return redirect('store')
-
-
-              
-
-    
-        
-
-# coupon code.
-def couponCode(request, pk):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-        items = order.orderitem_set.all()
-        
-    else:
-        return redirect('store')
-
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'items': items, 'order': order, 'site': site, 'pk':pk}
-    return render(request, 'store/frontend/bulkcart.html', context)  
-
-
-# single product detail page.
-def detail(request, pk):
-    product = Product.objects.get(id=pk)
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-    else:
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'product': product, 'order': order, 'site': site}
-    return render(request, 'store/frontend/detail.html', context)
-
-
-# cart detail page.
-def cart(request):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-        items = order.orderitem_set.all()
-    else:
-        items = []
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'items': items, 'order': order, 'site': site}
-    return render(request, 'store/frontend/cart.html', context)
-
-
-# checkout page.
-def checkout(request):
-    if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(
-            user=request.user, complete=False)
-        items = order.orderitem_set.all()
-    else:
-        items = []
-        order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-    site = SiteInfo.objects.all()[:1].get()
-    context = {'items': items, 'order': order, 'site': site}
-    return render(request, 'store/frontend/checkout.html', context)
-
-
-# order store and send email.
-def checkoutForm(request):
-    if request.user.is_authenticated:
-        address = request.POST.get('address')
-        city = request.POST.get('city')
-        order = Order.objects.get(user=request.user, complete=False)
-        cartItem = order.orderitem_set.all()
-
-        # get total purchase amount and sent through email.
-        finalTotal = int(order.get_cartTotalPrice)
-
-        # checking if the cart item is available in the store
-        for cart in cartItem:
-            product = Product.objects.get(id=cart.product.id)
-            if product.stock < cart.quantity:
-                messages.warning(
-                    request, f'{product.name} is out of stock. only {product.stock} is available.')
-                return redirect('checkout')
-
-        # updating the product stock after order.
-        for cart in cartItem:
-            product = Product.objects.get(id=cart.product.id)
-            product.stock -= cart.quantity
-            product.save()
-
-        form = ShippingAddress(
-            user=request.user, order=order, address=address, city=city, finalTotal=finalTotal)
-        form.save()
-
-        
-        
-        # #sending email
-        # template = render_to_string('store/frontend/bill.html', {
-        #                             'message': "Thank you, Your Delivery is on the way.", 'cartItems': cartItem, 'user': request.user, 'finalTotal': finalTotal})
-        # email = EmailMessage(
-
-        #     'Amart Furniture',
-        #     template,
-        #     settings.EMAIL_HOST_USER,
-        #     [request.user.email],
-        # )
-        # email.fail_silently = False
-        # email.send()
-        # messages.success(request, 'Thank You, We will contact you!!')
-
-    items = []
-    site = SiteInfo.objects.all()[:1].get()
-    order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-    context = {'items': items, 'order': order, 'site': site}
-    return redirect('payment')
-
-
-
-
-""" get called when 'add to cart event is initiated, get product id 
-and action type from request body and update the quantity of individual product. """
-
-
-def updateItem(request):
-    data = json.loads(request.body)
-    productId = data['productId']
-    productAction = data['productAction']
-    product = Product.objects.get(id=productId)
-    order, created = Order.objects.get_or_create(
-        user=request.user, complete=False)
-    orderItem, created = OrderItem.objects.get_or_create(
-        order=order, product=product, user=request.user)
-
-    if productAction == 'add':
-        orderItem.quantity += 1
-
-    elif productAction == 'remove':
-        orderItem.quantity -= 1
-
-    elif productAction == 'delete':
-        orderItem.delete()
-        return JsonResponse('item added', safe=False)
-
-    orderItem.save()
-
-    if orderItem.quantity < 1:
-        orderItem.delete()
-
-    return JsonResponse('item added', safe=False)
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
 
 
 """ List of authentication controller """
@@ -550,9 +623,8 @@ def login_view(request):
     context = {'form': form, 'order': order}
     return render(request, 'store/authentication/login.html', context)
 
+
 # register new account
-
-
 def register(request):
     form = RegisterForm()
     if request.method == "POST":
@@ -588,7 +660,7 @@ def logout_view(request):
     return redirect('store')
 
 
-# order list page (customer).
+#order list page <customer>.
 @login_required(login_url='/login/')
 def orderList(request):
     try:
@@ -603,7 +675,7 @@ def orderList(request):
         return render(request, 'store/backend/orderhistory.html', context)
 
 
-# dashboard home page
+#dashboard page
 @login_required(login_url='/login/')
 def dashboard(request):
     msg = CustomerContactManager.objects.filter(seen=False).count()
@@ -611,7 +683,8 @@ def dashboard(request):
     return render(request, 'store/backend/welcome.html', context)
 
 
-# site update page.
+
+#site update <logo, about detail> page.
 @login_required(login_url='/login/')
 def sitecustom(request):
     site = SiteInfo.objects.all()[:1].get()
@@ -627,7 +700,8 @@ def sitecustom(request):
     return render(request, 'store/backend/sitecustom.html', context)
 
 
-# change password page.
+
+#password change.
 @login_required(login_url='/login/')
 def password_change(request, pk):
     if request.user.id == pk:
@@ -654,7 +728,8 @@ def password_change(request, pk):
         return redirect('store')
 
 
-# product list page.
+
+#list product.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def products(request):
@@ -666,7 +741,8 @@ def products(request):
     return render(request, 'store/backend/products.html', context)
 
 
-# new product add page.
+
+#product add.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def add_product(request):
@@ -681,7 +757,7 @@ def add_product(request):
     return render(request, 'store/backend/add_product.html', context)
 
 
-# new category add page.
+#add category.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def add_category(request):
@@ -697,7 +773,7 @@ def add_category(request):
     return render(request, 'store/backend/add_category.html', context)
 
 
-# category delete function.
+#delete category.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def delete_category(request, pk):
@@ -711,7 +787,7 @@ def delete_category(request, pk):
         return redirect('add_category')
 
 
-# product delete function.
+# delete product.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def delete_product(request, pk):
@@ -725,7 +801,7 @@ def delete_product(request, pk):
         return redirect('products')
 
 
-# update product.
+#update product.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def edit_product(request, pk):
@@ -742,7 +818,7 @@ def edit_product(request, pk):
     return render(request, 'store/backend/add_product.html', context)
 
 
-# update profile.
+#update profile <email, username, ..>
 @login_required(login_url='/login/')
 def update_profile(request, pk):
     if request.method == "POST":
@@ -762,7 +838,10 @@ def update_profile(request, pk):
     return render(request, 'store/backend/update_profile.html', context)
 
 
-# view outofstock product.
+
+
+""" store assistant functions """ 
+#view outofstock product.
 @login_required(login_url='/login/')
 @page_access(allowed=['store assistant'])
 def contactManager(request):
@@ -772,9 +851,7 @@ def contactManager(request):
     return render(request, 'store/backend/contactmanager.html', context)
 
 
-# email manager.
-
-
+#email manager.
 @login_required(login_url='/login/')
 @page_access(allowed=['store assistant'])
 def emailManager(request):
@@ -805,7 +882,7 @@ def emailManager(request):
     return redirect('contact_manager')
 
 
-# view custom order messages.
+#list custom design order.
 @login_required(login_url='/login/')
 @page_access(allowed=['store assistant'])
 def customOrder(request):
@@ -815,7 +892,7 @@ def customOrder(request):
     return render(request, 'store/backend/customorder.html', context)
 
 
-# view single custom order message.
+#custom design detail page.
 @login_required(login_url='/login/')
 @page_access(allowed=['store assistant'])
 def customOrderView(request, pk):
@@ -825,7 +902,10 @@ def customOrderView(request, pk):
     return render(request, 'store/backend/customorderView.html', context)
 
 
-# sent custom order email message to admin.
+
+
+
+#email custom design order <manager>.
 @login_required(login_url='/login/')
 @page_access(allowed=['store assistant'])
 def customOrderEmail(request, pk):
@@ -866,9 +946,9 @@ def customOrderEmail(request, pk):
     return redirect('custom-order')
 
 
-# custom order delete.
+#item delete <custom design order>.
 @login_required(login_url='/login/')
-@page_access(allowed=['store assistant', 'manager'])
+@page_access(allowed=['store assistant'])
 def customOrderDelete(request, pk):
     if request.method == "POST":
         try:
@@ -890,18 +970,35 @@ def deliveryList(request):
     return render(request, 'store/backend/delivery_page.html', context)
 
 
-# edit delivery status.
+
+
+
+
+
+
+""" <manager> functions """
+
+#customer message  <manager>.
 @login_required(login_url='/login/')
-@page_access(allowed=['manager', 'store assistant'])
+@page_access(allowed=['manager'])
+def customerMsgList(request):
+    msg1 = CustomerContactManager.objects.all()
+    msg = CustomerContactManager.objects.filter(seen=False).count()
+    context = {'msg1': msg1, 'msg': msg}
+    return render(request, 'store/backend/customer_message_manager.html', context)
+
+
+# edit delivery status <get request>.
+@login_required(login_url='/login/')
+@page_access(allowed=['manager'])
 def changeStatus(request, pk):
     product = ShippingAddress.objects.get(id=pk)
     msg = CustomerContactManager.objects.filter(seen=False).count()
     context = {'product': product, 'msg':msg}
     return render(request, 'store/backend/delivery_status.html', context)
 
-# update delivery status.
 
-
+# update delivery status <post request>.
 @login_required(login_url='/login/')
 @page_access(allowed=['manager', 'store assistant'])
 def updateStatus(request, pk):
@@ -914,24 +1011,16 @@ def updateStatus(request, pk):
     return redirect('deliveryList')
 
 
-# update delivery status.
-@login_required(login_url='/login/')
-@page_access(allowed=['manager', 'store assistant'])
-def updateStatus(request, pk):
-    if request.method == "POST":
-        product = ShippingAddress.objects.get(id=pk)
-        status = request.POST.get('delivery_status')
-        product.delivery_status = status
-        product.save()
-        messages.success(request, 'Status Updated!!')
-    return redirect('deliveryList')
+# # update delivery status.
+# @login_required(login_url='/login/')
+# @page_access(allowed=['manager', 'store assistant'])
+# def updateStatus(request, pk):
+#     if request.method == "POST":
+#         product = ShippingAddress.objects.get(id=pk)
+#         status = request.POST.get('delivery_status')
+#         product.delivery_status = status
+#         product.save()
+#         messages.success(request, 'Status Updated!!')
+#     return redirect('deliveryList')
 
 
-# customer message to manager.
-@login_required(login_url='/login/')
-@page_access(allowed=['manager', 'store assistant'])
-def customerMsgList(request):
-    msg1 = CustomerContactManager.objects.all()
-    msg = CustomerContactManager.objects.filter(seen=False).count()
-    context = {'msg1': msg1, 'msg': msg}
-    return render(request, 'store/backend/customer_message_manager.html', context)
