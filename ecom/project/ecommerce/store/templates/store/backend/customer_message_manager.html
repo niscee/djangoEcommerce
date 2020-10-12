@@ -4,39 +4,39 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
-<div class="col-md-12 col-sm-12 col-lg-12">
-    <div class="row">
-        <div class="col-sm-6">
-            <table class="table" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Message</th>
-                    </tr>
-                </thead>
-                <tbody>
+
+<div style="margin: auto; max-width:500px;">
+
+    <p class="alert alert-dark" style="text-align: center;">Customer Message</p>
+
+    <table class="table" style="width:100%">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
 
 
-                    {% for m in msg1 %}
-                    <tr>
+            {% for m in msg1 %}
+            <tr>
 
 
-                        <td>{{ m.user }}</td>
-                        <td>{{ m.messages }}</td>
+                <td>{{ m.user }}</td>
+                <td>{{ m.messages }}</td>
 
 
-                    </tr>
-                    {% endfor %}
+            </tr>
+            {% endfor %}
 
-                </tbody>
-            </table>
-        </div>
+        </tbody>
+    </table>
+</div>
 
-        <div class="col-sm-6">
 
-        </div>
 
-    </div>
+</div>
 
 </div>
 

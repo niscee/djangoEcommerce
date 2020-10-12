@@ -6,7 +6,7 @@ class ProductFilter(django_filters.FilterSet):
     product_code = django_filters.CharFilter(lookup_expr='iexact')
     class Meta:
         model = Product
-        fields = ['special', 'category', 'name', 'product_code', 'price']
+        fields = ['special', 'category', 'name', 'product_code']
 
 
 class CategoryFilter(django_filters.FilterSet):

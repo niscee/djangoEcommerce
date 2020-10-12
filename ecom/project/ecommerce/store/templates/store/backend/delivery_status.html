@@ -6,7 +6,7 @@
 
 <p class="alert alert-dark" style="text-align: center;">Change Delivery Status</p>
 
-<div style="margin:auto; width:400px;">
+<div style="margin:auto; max-width:400px;">
 
 <form action="{% url 'change_delivery_status_update' product.id %}" method="POST">
     {% csrf_token %}

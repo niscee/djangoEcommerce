@@ -6,7 +6,7 @@
 
 <p class="alert alert-dark" style="text-align: center;">Product Table</p>
 <div>
-    <form method="get" style="display:flex; margin:auto">
+    <form method="get" style=" margin:auto; max-width: 100%;">
         {{ myFilter.form }}
         <input type="submit" class="btn btn-primary btn-sm" />
     </form>
@@ -15,7 +15,7 @@
 
 
 
-
+<div class="table-responsive">
 <table class="table" style="margin:10px 0px; width:100%">
     <thead>
         <tr>
@@ -64,6 +64,6 @@
 
     </tbody>
 </table>
-
+</div>
 
 {% endblock  %}
