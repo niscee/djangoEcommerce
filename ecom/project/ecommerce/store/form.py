@@ -43,6 +43,7 @@ class SiteUpdateForm(forms.ModelForm):
     class Meta:
         model = SiteInfo
         fields = ['about','logo'] 
+        
 
 
 class CustomOrderForm(forms.ModelForm):
@@ -50,7 +51,11 @@ class CustomOrderForm(forms.ModelForm):
     class Meta:
         model = CustomOrder
         widgets = {
-            'date': forms.TextInput(attrs={'placeholder': 'format: 2019-12-16'})
+            'date': forms.TextInput(attrs={'placeholder': 'format: 2019-12-16'}),
+            'size': forms.Textarea(attrs={'rows':4, 'cols':15}),
+            'materials': forms.Textarea(attrs={'rows':4, 'cols':15}),
+            'custom_details': forms.Textarea(attrs={'rows':4, 'cols':15}),
+            'extra_items': forms.Textarea(attrs={'rows':4, 'cols':15}),
         }
         fields = ['size', 'date', 'extra_items', 'custom_details', 'materials'] 
 

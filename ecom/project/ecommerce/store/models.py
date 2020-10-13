@@ -4,11 +4,22 @@ import uuid
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from ckeditor.fields import RichTextField
+
+
+ 
+#render html page to pdf.
+from io import BytesIO
+from django.http import HttpResponse
+from django.template.loader import get_template
+import xhtml2pdf.pisa as pisa
+from django.core.files import File
+
 
 #list of models
 class SiteInfo(models.Model):
     logo = models.ImageField(null=True, blank=True)
-    about = models.TextField(null=True, blank=True)
+    about = RichTextField(null=True, blank=True, config_name='awesome_ckeditor')
     
     @property
     def imageURL(self):
@@ -53,6 +64,8 @@ class Product(models.Model):
         except:
             url = ''
         return url    
+    
+        
 
 
 
@@ -62,6 +75,7 @@ class Order(models.Model):
     complete = models.BooleanField(default=False)
     transaction_id = models.UUIDField(default=uuid.uuid4, editable = False, unique=True)
     payment = models.BooleanField(default=False)
+    pdf = models.FileField(upload_to='pdfs/', null=True, blank=True)
     
 
    
@@ -78,7 +92,7 @@ class Order(models.Model):
         #validating shipping charge
         try:
             ship_address = self.shippingaddress_set.all()[0]
-            if ship_address.address.upper() == "SYDNEY":
+            if ship_address.city.upper() == "SYDNEY":
                 CHARGE = 20
             else:
                 CHARGE = 60
@@ -94,6 +108,26 @@ class Order(models.Model):
         orderitems = self.orderitem_set.all()
         totalItems = sum([item.quantity for item in orderitems])
         return totalItems 
+
+   
+
+    def render_to_pdf(self, path, params):
+        template = get_template(path)
+        html = template.render(params)
+        response = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
+        if not pdf.err:
+            return HttpResponse(response.getvalue(), content_type='application/pdf')
+        else:
+            return HttpResponse("Error Rendering PDF", status=400)
+    
+
+    def generate_obj_pdf(self, instance_id, params):
+        obj = Order.objects.get(id=instance_id)
+        pdf = self.render_to_pdf('store/frontend/pdf.html', params)
+        filename = "Invoice_%s.pdf" %("1")
+        obj.pdf.save(filename, File(BytesIO(pdf.content)))  
+
 
 
 class Token(models.Model):

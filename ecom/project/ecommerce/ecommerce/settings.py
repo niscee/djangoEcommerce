@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'django_filters',
     'store',
+    'ckeditor',
 ]
 
 MIDDLEWARE = [
@@ -130,14 +131,25 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 MEDIA_URL = '/images/'
 
+
 #crispy form support default bootstrap 2 so changing it to bootstrap4
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+
+CKEDITOR_CONFIGS = {
+    'awesome_ckeditor': {
+        'toolbar': 'Basic',
+        'height': 400,
+        'width': 1100,
+        
+    },
+}
 
 
 #email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER =  '****'
-EMAIL_HOST_PASSWORD = '****'
+EMAIL_HOST_USER =  ''
+EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True

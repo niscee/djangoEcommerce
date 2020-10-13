@@ -90,9 +90,9 @@
 			</ul>
 			<div class="form-inline my-2 my-lg-0">
 				{% if request.user.is_authenticated %}
-				<a href="{% url 'dashboard' %}" class="btn btn-warning btn-sm">Dashboard</a>
+				<a href="{% url 'dashboard' %}" class="btn btn-warning btn-sm" style="border-radius: 12px;">Dashboard</a>
 				{% else %}
-				<a href="{% url 'login' %}" class="btn btn-warning btn-sm">Login</a>
+				<a href="{% url 'login' %}" class="btn btn-warning btn-sm" style="border-radius: 12px;">Login</a>
 				{% endif %}
 				<a href="{% url 'cart' %}">
 					<img id="cart-icon" src="{% static 'images/cart.png' %}">
@@ -103,9 +103,12 @@
 		</div>
 	</nav>
 
+	
+
 	<div class="container" style="margin-bottom:100px">
 		{% include 'store/frontend/search_section.html' %}
 		<br>
+		
 		{% block content %}{% endblock content %}
 	</div>
 

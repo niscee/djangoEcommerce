@@ -309,7 +309,7 @@ def checkoutForm(request):
         cartItem = order.orderitem_set.all()
 
         # get total purchase amount and sent through email.
-        if address.upper() == "SYDNEY":
+        if city.upper() == "SYDNEY":
             CHARGE = 20
         else:
             CHARGE = 60
@@ -342,6 +342,7 @@ def checkoutForm(request):
 
 
 
+
 #site payment page.
 def payment(request):
     if request.user.is_authenticated:
@@ -356,24 +357,6 @@ def payment(request):
     site = SiteInfo.objects.all()[:1].get()
     context = {'products': products, 'order': order, 'site': site, 'total': total}
     return render(request, 'store/frontend/paypal.html', context)    
-
-
-
-#render html page to pdf.
-from io import BytesIO
-from django.http import HttpResponse
-from django.template.loader import get_template
-import xhtml2pdf.pisa as pisa
-
-def render_pdf(path, params):
-    template = get_template(path)
-    html = template.render(params)
-    response = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
-    if not pdf.err:
-        return HttpResponse(response.getvalue(), content_type='application/pdf')
-    else:
-        return HttpResponse("Error Rendering PDF", status=400)
 
 
 
@@ -400,34 +383,24 @@ def paymentConfirmation(request, pk):
         'username' : name,
         'email' : request.user.email,
     }
+    
+    #calling model function, generate invoice pdf and save
+    order.generate_obj_pdf(order.id, params)
 
-    pdf = render_pdf('store/frontend/pdf.html', params)
-    if pdf:
-        response = HttpResponse(pdf, content_type='application/pdf')
-        filename = "Invoice_%s.pdf" %("12341231")
-        content = "inline; filename='%s'" %(filename)
-        download = request.GET.get("download")
-        if download:
-            content = "attachment; filename='%s'" %(filename)
-        response['Content-Disposition'] = content
-        return response
-    return HttpResponse("Not found")    
+    message = "You can see your invoice in your dashboard."
 
-       
+    #sending email
+    template = render_to_string('store/frontend/emailbody.html', {
+                                'user': request.user, 'message': message})
+    email = EmailMessage(
 
-    # #sending email
-        # template = render_to_string('store/frontend/bill.html', {
-        #                             'message': "Thank you, Your Delivery is on the way.", 'cartItems': cartItem, 'user': request.user, 'finalTotal': finalTotal})
-        # email = EmailMessage(
-
-        #     'Amart Furniture',
-        #     template,
-        #     settings.EMAIL_HOST_USER,
-        #     [request.user.email],
-        # )
-        # email.fail_silently = False
-        # email.send()
-        # messages.success(request, 'Thank You, We will contact you!!')    
+        'Amart Furniture',
+        template,
+        settings.EMAIL_HOST_USER,
+        [request.user.email],
+    )
+    email.fail_silently = False
+    email.send()
 
     return redirect('store')
      
@@ -525,73 +498,10 @@ def sortCategory(request, pk):
     return render(request, 'store/frontend/search.html', context)
 
 
-    
 
 
 
 
-# # contact page.
-# def contact(request):
-#     if request.method == "POST":
-#         # getting email of a user related to store group
-#         group = Group.objects.get(name="store assistant")
-#         usersList = group.user_set.all()
-#         emails = []
-#         for user in usersList:
-#             emails.append(user.email)
-
-#         # getting detail for the order
-#         message = request.POST.get('message')
-
-#         # sending email
-#         for email in emails:
-#             template = render_to_string(
-#                 'store/frontend/emailbody.html', {'message': message})
-#             email = EmailMessage(
-#                 'Amart (customer message)',
-#                 template,
-#                 settings.EMAIL_HOST_USER,
-#                 [email],
-#             )
-#             email.fail_silently = False
-#             email.send()
-
-#     if request.user.is_authenticated:
-#         order, created = Order.objects.get_or_create(
-#             user=request.user, complete=False)
-#         form = CustomOrderForm()
-#     else:
-#         form = {}
-#         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
-
-#     # getting manager group user.
-#     manager_group = Group.objects.get(name="manager")
-#     managers = manager_group.user_set.all()
-
-#     # getting store group user.
-#     store_group = Group.objects.get(name="store assistant")
-#     stores = store_group.user_set.all()
-
-#     products = Product.objects.all()
-#     site = SiteInfo.objects.all()[:1].get()
-#     context = {'products': products, 'order': order, 'site': site,
-#                'form': form, 'managers': managers, 'stores': stores}
-#     return render(request, 'store/frontend/contactemail.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 
 
 
@@ -642,13 +552,6 @@ def register(request):
     order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
     context = {'form': form, 'order': order}
     return render(request, 'store/authentication/register.html', context)
-
-
-
-
-
-
-
 
 
 
@@ -960,14 +863,7 @@ def customOrderDelete(request, pk):
         return redirect('custom-order')
 
 
-# delivery product status.
-@login_required(login_url='/login/')
-@page_access(allowed=['manager', 'store assistant'])
-def deliveryList(request):
-    products = ShippingAddress.objects.order_by('-id')
-    msg = CustomerContactManager.objects.filter(seen=False).count()
-    context = {'products': products, 'msg':msg}
-    return render(request, 'store/backend/delivery_page.html', context)
+
 
 
 
@@ -978,7 +874,18 @@ def deliveryList(request):
 
 """ <manager> functions """
 
-#customer message  <manager>.
+# delivery product status.
+@login_required(login_url='/login/')
+@page_access(allowed=['manager'])
+def deliveryList(request):
+    products = ShippingAddress.objects.order_by('-id')
+    orders = Order.objects.filter(complete=True)
+    msg = CustomerContactManager.objects.filter(seen=False).count()
+    context = {'products': products, 'msg':msg, 'orders':orders}
+    return render(request, 'store/backend/delivery_page.html', context)
+    
+
+#customer message  <manager>.   
 @login_required(login_url='/login/')
 @page_access(allowed=['manager'])
 def customerMsgList(request):
@@ -1011,16 +918,6 @@ def updateStatus(request, pk):
     return redirect('deliveryList')
 
 
-# # update delivery status.
-# @login_required(login_url='/login/')
-# @page_access(allowed=['manager', 'store assistant'])
-# def updateStatus(request, pk):
-#     if request.method == "POST":
-#         product = ShippingAddress.objects.get(id=pk)
-#         status = request.POST.get('delivery_status')
-#         product.delivery_status = status
-#         product.save()
-#         messages.success(request, 'Status Updated!!')
-#     return redirect('deliveryList')
+
 
 

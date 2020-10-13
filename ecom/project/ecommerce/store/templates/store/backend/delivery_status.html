@@ -22,14 +22,21 @@
       {% elif product.delivery_status == "Under Packing" %}
       <option>{{product.delivery_status}}</option>
       <option>Loading & Shipping</option>
-      <option aria-readonly="true">Delivered</option>
+      <option>Delivered</option>
+      <option>Pending</option>
+      
 
       {% elif product.delivery_status == "Loading & Shipping" %}
       <option>{{product.delivery_status}}</option>
-      <option aria-readonly="true">Delivered</option>
+      <option>Delivered</option>
+      <option>Pending</option>
+      <option>Under Packing</option>
 
       {% else %}
       <option>{{product.delivery_status}}</option>
+      <option>Under Packing</option>
+      <option>Loading & Shipping</option>
+      <option>Pending</option>
 
       {% endif %}
     </select><br>

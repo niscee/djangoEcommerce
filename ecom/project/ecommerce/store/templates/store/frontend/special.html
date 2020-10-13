@@ -99,7 +99,7 @@
             {% for product in specials %}
             <div class="mySlides">
                 <a href="{% url 'item_detail' product.id %}">
-                    <img src="{{ product.imageURL }}" style="width:60%; height:300px; display: block; margin:auto">
+                    <img src="{{ product.imageURL }}" style="width:60%; height:400px; display: block; margin:auto">
                 </a> 
                 <div style="text-align: center; font-weight: bold ;">{{product.name}}</div>   
             </div>
