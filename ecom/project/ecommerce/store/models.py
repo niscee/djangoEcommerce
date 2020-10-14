@@ -64,6 +64,24 @@ class Product(models.Model):
         except:
             url = ''
         return url    
+
+
+
+
+class Slider(models.Model):
+    image1 = models.ImageField(null=False, blank=True)
+    image2 = models.ImageField(null=False, blank=True)
+    image3 = models.ImageField(null=False, blank=True)
+    
+    
+    """ prevent getting error when no image is associated to product """
+    @property
+    def imageURL(self):
+        try:
+            url = self.image.url
+        except:
+            url = ''
+        return url 
     
         
 

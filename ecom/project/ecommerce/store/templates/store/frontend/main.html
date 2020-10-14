@@ -103,10 +103,13 @@
 		</div>
 	</nav>
 
+	<div class="col-md-11 col-md-11" style="margin: auto;">
+		{% include 'store/frontend/search_section.html' %}<br>
+		{% include 'store/frontend/banner.html' %}
+	</div>
 	
-
+	
 	<div class="container" style="margin-bottom:100px">
-		{% include 'store/frontend/search_section.html' %}
 		<br>
 		
 		{% block content %}{% endblock content %}

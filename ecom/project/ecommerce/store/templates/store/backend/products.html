@@ -4,8 +4,10 @@
 
 {% block content %}
 
-<p class="alert alert-dark" style="text-align: center;">Product Table</p>
-<div>
+<p class="alert alert-dark"> Product List\&nbsp;<span class="badge badge-light"><a href="{% url 'add_product' %}" style="font-size: 15px;">Add Product</a></span></p>
+ 
+
+<div style="margin-top: 10px;">
     <form method="get" style=" margin:auto; max-width: 100%;">
         {{ myFilter.form }}
         <input type="submit" class="btn btn-primary btn-sm" />

@@ -68,14 +68,14 @@
 					</a>
 
 					<a href="{% url 'site-custom' %}">
-						<li class="list-group-item">Site-Customization</li>
+						<li class="list-group-item">Site Customization</li>
 					</a>
+
+
 					<a href="{% url 'products' %}">
-						<li class="list-group-item">Products List</li>
+						<li class="list-group-item">Products</li>
 					</a>
-					<a href="{% url 'add_product' %}">
-						<li class="list-group-item">Add Product</li>
-					</a>
+					
 					<a href="{% url 'deliveryList' %}">
 						<li class="list-group-item">Delivery Status</li>
 					</a>
@@ -84,6 +84,12 @@
 						<li class="list-group-item">Customer Messages({{msg}})
 						</li>
 					</a>
+
+					<a href="{% url 'report' %}">
+						<li class="list-group-item">Report Generator
+						</li>
+					</a>
+
 
 					{% endif %}
 

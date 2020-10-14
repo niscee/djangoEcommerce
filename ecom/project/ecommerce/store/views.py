@@ -8,7 +8,11 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .models import *
-from .form import LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, UserUpdateForm, CategoryForm, SiteUpdateForm, CustomOrderForm, ContactManagerForm
+
+from .form import (LoginForm, ProductForm, RegisterForm, ProfileUpdateForm, 
+                   UserUpdateForm, CategoryForm, SiteUpdateForm, CustomOrderForm, 
+                   ContactManagerForm, SliderForm)
+
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
@@ -21,6 +25,13 @@ from django.shortcuts import get_object_or_404
 from .decorators import page_access
 from .filter import *
 import json
+
+#render html page to pdf.
+from io import BytesIO
+from django.http import HttpResponse
+from django.template.loader import get_template
+import xhtml2pdf.pisa as pisa
+from django.core.files import File
 
 
 """ List of frontend controller """
@@ -36,10 +47,11 @@ def store(request):
 
     products = Product.objects.filter(special=False)
     site = SiteInfo.objects.all()[:1].get()
+    slider = Slider.objects.get(id=1)
     specials = Product.objects.filter(special=True)
     category = Category.objects.all()
     context = {'products': products, 'order': order,
-               'specials': specials, 'category': category, 'site': site}
+               'specials': specials, 'category': category, 'site': site, 'slider': slider}
     return render(request, 'store/frontend/store.html', context)
 
 
@@ -413,6 +425,7 @@ def searchItem(request):
     site = SiteInfo.objects.all()[:1].get()
     products = Product.objects.filter(name__icontains=item_name) | Product.objects.filter(product_code__icontains=item_name)
     category = Category.objects.all()
+    slider = Slider.objects.all()[:1].get()
     specials = {}
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
@@ -421,7 +434,7 @@ def searchItem(request):
         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
 
     context = {'products': products, 'order': order,
-               'specials': specials, 'category': category, 'site': site}
+               'specials': specials, 'category': category, 'site': site, 'slider': slider}
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -431,6 +444,7 @@ def searchItem(request):
 def sortPriceHighest(request):
     products = Product.objects.order_by('-price')
     category = Category.objects.all()
+    slider = Slider.objects.get(id=1)
     site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
@@ -439,7 +453,7 @@ def sortPriceHighest(request):
         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
 
     context = {'products': products, 'order': order,
-               'category': category, 'site': site}
+               'category': category, 'site': site, 'slider':slider}
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -469,6 +483,7 @@ def sortPriceLowest(request):
     products = Product.objects.order_by('price')
     category = Category.objects.all()
     site = SiteInfo.objects.all()[:1].get()
+    slider = Slider.objects.get(id=1)
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
             user=request.user, complete=False)
@@ -476,7 +491,7 @@ def sortPriceLowest(request):
         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
 
     context = {'products': products, 'order': order,
-               'category': category, 'site': site}
+               'category': category, 'site': site, 'slider': slider}
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -486,6 +501,7 @@ def sortPriceLowest(request):
 def sortCategory(request, pk):
     products = Product.objects.filter(category=pk)
     category = Category.objects.all()
+    slider = Slider.objects.get(id=1)
     site = SiteInfo.objects.all()[:1].get()
     if request.user.is_authenticated:
         order, created = Order.objects.get_or_create(
@@ -494,7 +510,7 @@ def sortCategory(request, pk):
         order = {'get_cartTotalItems': 0, 'get_cartTotalPrice': 0}
 
     context = {'products': products, 'order': order,
-               'category': category, 'site': site}
+               'category': category, 'site': site, 'slider': slider}
     return render(request, 'store/frontend/search.html', context)
 
 
@@ -879,9 +895,8 @@ def customOrderDelete(request, pk):
 @page_access(allowed=['manager'])
 def deliveryList(request):
     products = ShippingAddress.objects.order_by('-id')
-    orders = Order.objects.filter(complete=True)
     msg = CustomerContactManager.objects.filter(seen=False).count()
-    context = {'products': products, 'msg':msg, 'orders':orders}
+    context = {'products': products, 'msg':msg}
     return render(request, 'store/backend/delivery_page.html', context)
     
 
@@ -907,7 +922,7 @@ def changeStatus(request, pk):
 
 # update delivery status <post request>.
 @login_required(login_url='/login/')
-@page_access(allowed=['manager', 'store assistant'])
+@page_access(allowed=['manager'])
 def updateStatus(request, pk):
     if request.method == "POST":
         product = ShippingAddress.objects.get(id=pk)
@@ -916,6 +931,78 @@ def updateStatus(request, pk):
         product.save()
         messages.success(request, 'Status Updated!!')    
     return redirect('deliveryList')
+
+
+# slider list.
+@login_required(login_url='/login/')
+@page_access(allowed=['manager'])
+def sliderList(request):
+    slider = Slider.objects.get(id=1)
+    msg = CustomerContactManager.objects.filter(seen=False).count()
+    context = {'slider': slider, 'msg': msg}
+    return render(request, 'store/backend/sliderView.html', context)
+
+
+# slider update.
+@login_required(login_url='/login/')
+@page_access(allowed=['manager'])
+def sliderUpdate(request, pk):
+    slider = Slider.objects.get(id=pk)
+    
+    if request.method == "POST":
+        form = SliderForm(request.POST, request.FILES, instance=slider)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Banner has been Updated!!')
+            return redirect('slider_list')
+        
+
+    form = SliderForm(instance=slider)
+    msg = CustomerContactManager.objects.filter(seen=False).count()
+    context = {'slider': slider, 'msg': msg, 'form': form}
+    return render(request, 'store/backend/sliderUpdate.html', context)
+
+
+
+
+#generate report view.
+@login_required(login_url='/login/')
+@page_access(allowed=['manager'])
+def Report(request):
+    context = {}
+    return render(request, 'store/backend/sitereport.html', context)
+
+
+
+#generating report and converting it into pdf.
+def render_to_pdf(path, params):
+        template = get_template(path)
+        html = template.render(params)
+        response = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
+        if not pdf.err:
+            return HttpResponse(response.getvalue(), content_type='application/pdf')
+        else:
+            return HttpResponse("Error Rendering PDF", status=400)
+    
+
+def generate_pdf_report(request):
+    obj = OrderItem.objects.all()
+    total = int(sum([i.product.price for i in obj]))
+    params = { "params": obj, "total":total }
+    pdf = render_to_pdf('store/backend/reportpdf.html', params)
+
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename = "Invoice_%s.pdf" %("12341231")
+        content = "inline; filename='%s'" %(filename)
+        download = request.GET.get("download")
+        if download:
+            content = "attachment; filename='%s'" %(filename)
+        response['Content-Disposition'] = content
+        return response
+        
+    return HttpResponse("Not found") 
 
 
 

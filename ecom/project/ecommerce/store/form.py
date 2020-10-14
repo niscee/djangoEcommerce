@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Product, Profile, Category, SiteInfo, CustomOrder, CustomerContactManager
+from .models import Product, Profile, Category, SiteInfo, CustomOrder, CustomerContactManager, Slider
 
 # Create the form class.
 class RegisterForm(UserCreationForm):
@@ -64,6 +64,13 @@ class ContactManagerForm(forms.ModelForm):
     class Meta:
         model = CustomerContactManager
         fields = ['messages']
+
+
+
+class SliderForm(forms.ModelForm):
+    class Meta:
+        model = Slider
+        fields = ['image1', 'image2', 'image3']        
                       
 
 

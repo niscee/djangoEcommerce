@@ -84,7 +84,6 @@ urlpatterns = [
     #coupon code submission.
     path('coupon_code_submission', views.couponSubmission, name='coupon_code_submission'),
 
-
     #payment confirmation.
     path('<int:pk>/payment_confirmation', views.paymentConfirmation, name='paymentConfirmation'),
 
@@ -121,6 +120,18 @@ urlpatterns = [
 
     #customer message to manager.
     path('customer_msg', views.customerMsgList, name='customer_msg'),
+
+    #slider list.
+    path('banner', views.sliderList, name='slider_list'),
+
+    #slider update.
+    path('<int:pk>/banner', views.sliderUpdate, name='slider_update'),
+
+    #report generator view.
+    path('report', views.Report, name='report'),
+
+    #generate report.
+    path('report_generate', views.generate_pdf_report, name='report_generate'),
  
 
 ]
