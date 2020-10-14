@@ -46,7 +46,7 @@
 		<div class="row" style="padding: 20px; border-radius: 3px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">
 
 			<div class="col-xs-12 col-sm-12 col-md-3" style="padding: 30px; border-radius: 15px;">
-				<ul class="list-group" style="text-align: center; border: groove; border-radius: 5px;">
+				<ul class="list-group" style="text-align: center;">
 					<li class="list-group-item"><b><u>{{ request.user.groups.all.0|title }} Dashboard</u></b></li>
 
 					{% if request.user.groups.all.0.name == "customer" %}
